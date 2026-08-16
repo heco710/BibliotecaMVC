@@ -1,0 +1,36 @@
+@model Libro
+
+@{
+    ViewData["Title"] = Model.Titulo;
+}
+
+<main class="module-page">
+    <div class="container-xl">
+        <a class="back-link" asp-action="Index">← Volver al catálogo</a>
+        <article class="book-detail-card">
+            <div class="book-detail-media">
+                <img src="@Url.Content($"~/images/{Model.Imagen}")" alt="Ilustración representativa de @Model.Titulo" />
+            </div>
+            <div class="book-detail-content">
+                <div class="catalog-book-meta">
+                    <span class="category-pill">@Model.Categoria</span>
+                    <span class="status-badge @(Model.Disponible ? "status-active" : "status-inactive")">
+                        @(Model.Disponible ? "Disponible" : "Prestado")
+                    </span>
+                </div>
+                <span class="module-kicker">Libro #@Model.ID</span>
+                <h1>@Model.Titulo</h1>
+                <p class="book-detail-author">@Model.Autor</p>
+                <p class="book-detail-description">@Model.Descripcion</p>
+                <dl class="detail-list">
+                    <div><dt>Año de publicación</dt><dd>@Model.AnioPublicacion</dd></div>
+                    <div><dt>ISBN</dt><dd>@Model.ISBN</dd></div>
+                </dl>
+                <div class="form-actions">
+                    <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.ID">Eliminar</a>
+                    <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.ID">Editar libro</a>
+                </div>
+            </div>
+        </article>
+    </div>
+</main>

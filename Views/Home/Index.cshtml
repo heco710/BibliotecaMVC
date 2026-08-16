@@ -1,8 +1,121 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1> Sistema de Gestion de Biblioteca</h1>
-    <p> Bienvenido al sistema desarrollado con ASP.Net Core MVC</p>
-</div>
+<section class="home-hero" aria-labelledby="home-title">
+    <div class="container-xl">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6 hero-copy">
+                <span class="eyebrow">Tu biblioteca, en cualquier lugar</span>
+                <h1 id="home-title">Encuentra tu próxima <span>gran historia</span></h1>
+                <p class="hero-lead">Explora autores inolvidables, descubre nuevos géneros y gestiona tus lecturas desde una biblioteca creada para todos.</p>
+                <div class="hero-actions d-flex flex-wrap gap-3">
+                    <a class="btn btn-primary btn-lg" asp-controller="Libros" asp-action="Index">Explorar catálogo</a>
+                    <a class="btn btn-outline-light btn-lg" asp-controller="Home" asp-action="Acerca_de">Conocer la biblioteca</a>
+                </div>
+                <div class="hero-metrics d-flex flex-wrap" aria-label="Resumen de la biblioteca">
+                    <div><strong>1,200+</strong><span>Libros</span></div>
+                    <div><strong>480</strong><span>Autores</span></div>
+                    <div><strong>24/7</strong><span>Acceso</span></div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div id="libraryHighlights" class="carousel slide hero-carousel" data-bs-ride="carousel" aria-label="Lecturas destacadas">
+                    <div class="carousel-indicators">
+                        <button type="button" data-bs-target="#libraryHighlights" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Destacado 1"></button>
+                        <button type="button" data-bs-target="#libraryHighlights" data-bs-slide-to="1" aria-label="Destacado 2"></button>
+                        <button type="button" data-bs-target="#libraryHighlights" data-bs-slide-to="2" aria-label="Destacado 3"></button>
+                    </div>
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <div class="featured-slide slide-one">
+                                <span class="badge rounded-pill">Selección de la semana</span>
+                                <div class="book-display" aria-hidden="true"><span>CIEN AÑOS<br />DE SOLEDAD</span></div>
+                                <div><small>Realismo mágico</small><h2>Vuelve a Macondo</h2><p>Una historia que transformó la literatura latinoamericana.</p></div>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <div class="featured-slide slide-two">
+                                <span class="badge rounded-pill">Voces esenciales</span>
+                                <div class="book-display book-display-alt" aria-hidden="true"><span>LA CASA DE<br />LOS ESPÍRITUS</span></div>
+                                <div><small>Narrativa contemporánea</small><h2>Memoria y familia</h2><p>Descubre una saga atravesada por el amor y la historia.</p></div>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <div class="featured-slide slide-three">
+                                <span class="badge rounded-pill">Orgullo guatemalteco</span>
+                                <div class="book-display book-display-third" aria-hidden="true"><span>EL SEÑOR<br />PRESIDENTE</span></div>
+                                <div><small>Clásico nacional</small><h2>Una obra imprescindible</h2><p>Conoce la mirada literaria de Miguel Ángel Asturias.</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#libraryHighlights" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Anterior</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#libraryHighlights" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Siguiente</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="quick-access-section" aria-labelledby="quick-access-title">
+    <div class="container-xl">
+        <div class="section-heading">
+            <div><span class="eyebrow eyebrow-dark">Todo a un clic</span><h2 id="quick-access-title">¿Qué deseas consultar?</h2></div>
+            <p>Accede rápidamente a los recursos principales de nuestra biblioteca.</p>
+        </div>
+        <div class="quick-actions">
+            <a class="quick-action-card" asp-controller="Libros" asp-action="Index">
+                <span class="quick-icon" aria-hidden="true">01</span><span><strong>Catálogo de libros</strong><small>Encuentra tu próxima lectura</small></span><span class="arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="quick-action-card" asp-controller="Autores" asp-action="Index">
+                <span class="quick-icon" aria-hidden="true">02</span><span><strong>Nuestros autores</strong><small>Conoce las voces detrás de cada obra</small></span><span class="arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="quick-action-card" asp-controller="Home" asp-action="Categorias">
+                <span class="quick-icon" aria-hidden="true">03</span><span><strong>Categorías</strong><small>Explora el catálogo por tema</small></span><span class="arrow" aria-hidden="true">→</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="catalog-section" aria-labelledby="catalog-title">
+    <div class="container-xl">
+        <div class="section-heading">
+            <div><span class="eyebrow eyebrow-dark">Colección recomendada</span><h2 id="catalog-title">Libros destacados</h2></div>
+            <a class="text-link" asp-controller="Libros" asp-action="Index">Ver todo el catálogo <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="catalog-grid">
+            <article class="book-card">
+                <div class="book-cover cover-coral"><span>Realismo mágico</span><strong>Cien años de soledad</strong><small>Gabriel García Márquez</small></div>
+                <div class="card-body"><span class="badge text-bg-light">Novela</span><h3>Cien años de soledad</h3><p>Gabriel García Márquez</p><a class="stretched-link" asp-controller="Libros" asp-action="Details" asp-route-id="1"><span class="visually-hidden">Ver Cien años de soledad</span></a></div>
+            </article>
+            <article class="book-card">
+                <div class="book-cover cover-indigo"><span>Ficción</span><strong>La casa de los espíritus</strong><small>Isabel Allende</small></div>
+                <div class="card-body"><span class="badge text-bg-light">Narrativa</span><h3>La casa de los espíritus</h3><p>Isabel Allende</p><a class="stretched-link" asp-controller="Libros" asp-action="Details" asp-route-id="2"><span class="visually-hidden">Ver La casa de los espíritus</span></a></div>
+            </article>
+            <article class="book-card">
+                <div class="book-cover cover-gold"><span>Cuentos</span><strong>Ficciones</strong><small>Jorge Luis Borges</small></div>
+                <div class="card-body"><span class="badge text-bg-light">Clásico</span><h3>Ficciones</h3><p>Jorge Luis Borges</p><a class="stretched-link" asp-controller="Libros" asp-action="Details" asp-route-id="3"><span class="visually-hidden">Ver Ficciones</span></a></div>
+            </article>
+            <article class="book-card">
+                <div class="book-cover cover-green"><span>Literatura</span><strong>El señor Presidente</strong><small>Miguel Ángel Asturias</small></div>
+                <div class="card-body"><span class="badge text-bg-light">Novela</span><h3>El señor Presidente</h3><p>Miguel Ángel Asturias</p><a class="stretched-link" asp-controller="Libros" asp-action="Details" asp-route-id="4"><span class="visually-hidden">Ver El señor Presidente</span></a></div>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="services-preview" aria-labelledby="services-title">
+    <div class="container-xl">
+        <div class="text-center section-intro"><span class="eyebrow">Más que libros</span><h2 id="services-title">Una biblioteca que te acompaña</h2><p>Servicios pensados para facilitar el acceso al conocimiento.</p></div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-6 col-lg-4"><div class="card service-preview-card h-100"><div class="card-body"><span class="service-number">01</span><h3>Préstamos sencillos</h3><p>Consulta el estado de tus préstamos y organiza tus próximas lecturas.</p></div></div></div>
+            <div class="col-md-6 col-lg-4"><div class="card service-preview-card h-100"><div class="card-body"><span class="service-number">02</span><h3>Acceso permanente</h3><p>Navega por el catálogo desde cualquier dispositivo, cuando lo necesites.</p></div></div></div>
+            <div class="col-md-6 col-lg-4"><div class="card service-preview-card h-100"><div class="card-body"><span class="service-number">03</span><h3>Selección diversa</h3><p>Descubre obras, autores y categorías para todos los intereses.</p></div></div></div>
+        </div>
+    </div>
+</section>
