@@ -1,44 +1,73 @@
-@model List<Autor>
+@model IEnumerable<Autor>
 
 @{
     ViewData["Title"] = "Autores";
 }
 
-<h1>Catálogo de Autores</h1>
+<main class="module-page">
+    <div class="container-xl">
+        <header class="module-header">
+            <div>
+                <span class="module-kicker">Administración</span>
+                <h1>Catálogo de autores</h1>
+                <p>Consulta y mantén actualizada la información de los autores de la biblioteca.</p>
+            </div>
+            <a class="btn btn-primary" asp-action="Create">Agregar autor</a>
+        </header>
 
-<div class="table-responsive">
-    <table class="table table-striped table-hover align-middle">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Nacionalidad</th>
-                <th>Fecha de nacimiento</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var autor in Model)
-            {
-                <tr>
-                    <td>@autor.ID</td>
-                    <td>@autor.Nombre</td>
-                    <td>@autor.Apellido</td>
-                    <td>@autor.Nacionalidad</td>
-                    <td>@autor.FechaNacimiento.ToString("dd/MM/yyyy")</td>
-                    <td>
-                        @if (autor.Activo)
+        @if (TempData["Mensaje"] is string mensaje)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @mensaje
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+        }
+
+        <section class="module-table-card" aria-labelledby="authors-table-title">
+            <div class="module-card-heading">
+                <div>
+                    <h2 id="authors-table-title">Autores registrados</h2>
+                    <p>@Model.Count() registros en el catálogo</p>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Autor</th>
+                            <th>Nacionalidad</th>
+                            <th>Fecha de nacimiento</th>
+                            <th>Estado</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var autor in Model)
                         {
-                            <span class="badge bg-success">Activo</span>
+                            <tr>
+                                <td>
+                                    <span class="entity-avatar" aria-hidden="true">@autor.Nombre[0]@autor.Apellido[0]</span>
+                                    <strong>@autor.Nombre @autor.Apellido</strong>
+                                </td>
+                                <td>@autor.Nacionalidad</td>
+                                <td>@autor.FechaNacimiento.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="status-badge @(autor.Activo ? "status-active" : "status-inactive")">
+                                        @(autor.Activo ? "Activo" : "Inactivo")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-group justify-content-end">
+                                        <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@autor.ID">Ver</a>
+                                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@autor.ID">Editar</a>
+                                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@autor.ID">Eliminar</a>
+                                    </div>
+                                </td>
+                            </tr>
                         }
-                        else
-                        {
-                            <span class="badge bg-danger">Inactivo</span>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</main>

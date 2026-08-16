@@ -1,0 +1,27 @@
+@model Autor
+
+@{
+    ViewData["Title"] = "Eliminar autor";
+}
+
+<main class="module-page">
+    <div class="container-xl">
+        <div class="entity-form-shell entity-form-shell-narrow">
+            <a class="back-link" asp-action="Index">← Volver a autores</a>
+            <article class="danger-panel">
+                <span class="danger-mark" aria-hidden="true">!</span>
+                <span class="module-kicker">Confirmación requerida</span>
+                <h1>Eliminar autor</h1>
+                <p>Vas a eliminar a <strong>@Model.Nombre @Model.Apellido</strong>. Esta acción actualizará inmediatamente el listado.</p>
+                <dl class="detail-list compact">
+                    <div><dt>Nacionalidad</dt><dd>@Model.Nacionalidad</dd></div>
+                    <div><dt>Estado</dt><dd>@(Model.Activo ? "Activo" : "Inactivo")</dd></div>
+                </dl>
+                <form asp-action="Delete" asp-route-id="@Model.ID" method="post" class="form-actions">
+                    <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+                    <button class="btn btn-danger" type="submit">Sí, eliminar autor</button>
+                </form>
+            </article>
+        </div>
+    </div>
+</main>

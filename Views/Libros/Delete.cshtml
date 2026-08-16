@@ -1,0 +1,27 @@
+@model Libro
+
+@{
+    ViewData["Title"] = "Eliminar libro";
+}
+
+<main class="module-page">
+    <div class="container-xl">
+        <div class="entity-form-shell entity-form-shell-narrow">
+            <a class="back-link" asp-action="Index">← Volver al catálogo</a>
+            <article class="danger-panel">
+                <span class="danger-mark" aria-hidden="true">!</span>
+                <span class="module-kicker">Confirmación requerida</span>
+                <h1>Eliminar libro</h1>
+                <p>Vas a eliminar <strong>@Model.Titulo</strong> de <strong>@Model.Autor</strong>. Esta acción actualizará inmediatamente el catálogo.</p>
+                <div class="delete-book-preview">
+                    <img src="@Url.Content($"~/images/{Model.Imagen}")" alt="Ilustración representativa de @Model.Titulo" />
+                    <div><strong>@Model.Titulo</strong><span>@Model.Categoria · @Model.AnioPublicacion</span></div>
+                </div>
+                <form asp-action="Delete" asp-route-id="@Model.ID" method="post" class="form-actions">
+                    <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+                    <button class="btn btn-danger" type="submit">Sí, eliminar libro</button>
+                </form>
+            </article>
+        </div>
+    </div>
+</main>

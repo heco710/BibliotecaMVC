@@ -1,0 +1,30 @@
+@model Libro
+
+@{
+    ViewData["Title"] = "Editar libro";
+}
+
+<main class="module-page">
+    <div class="container-xl">
+        <div class="entity-form-shell">
+            <a class="back-link" asp-action="Index">← Volver al catálogo</a>
+            <header class="entity-form-header">
+                <span class="module-kicker">Libro #@Model.ID</span>
+                <h1>Editar libro</h1>
+                <p>Actualiza sus datos, disponibilidad o imagen.</p>
+            </header>
+            <form asp-action="Edit" asp-route-id="@Model.ID" method="post" class="entity-form-card">
+                <input asp-for="ID" type="hidden" />
+                <partial name="_Form" model="Model" />
+                <div class="form-actions">
+                    <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+                    <button class="btn btn-primary" type="submit">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

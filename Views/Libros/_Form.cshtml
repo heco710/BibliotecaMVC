@@ -1,0 +1,51 @@
+@model Libro
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+<div class="row g-4">
+    <div class="col-md-8">
+        <label asp-for="Titulo" class="form-label"></label>
+        <input asp-for="Titulo" class="form-control" />
+        <span asp-validation-for="Titulo" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="AnioPublicacion" class="form-label"></label>
+        <input asp-for="AnioPublicacion" class="form-control" type="number" min="1000" max="@DateTime.Today.Year" />
+        <span asp-validation-for="AnioPublicacion" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Autor" class="form-label"></label>
+        <input asp-for="Autor" class="form-control" />
+        <span asp-validation-for="Autor" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Categoria" class="form-label"></label>
+        <input asp-for="Categoria" class="form-control" />
+        <span asp-validation-for="Categoria" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="ISBN" class="form-label"></label>
+        <input asp-for="ISBN" class="form-control" />
+        <span asp-validation-for="ISBN" class="text-danger"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Imagen" class="form-label">Imagen representativa</label>
+        <select asp-for="Imagen" class="form-select">
+            <option value="cien-anos-soledad.png">Paisaje de realismo mágico</option>
+            <option value="casa-espiritus.png">Casa de los espíritus</option>
+            <option value="ficciones.png">Laberinto literario</option>
+            <option value="senor-presidente.png">Ciudad política</option>
+        </select>
+        <span asp-validation-for="Imagen" class="text-danger"></span>
+    </div>
+    <div class="col-12">
+        <label asp-for="Descripcion" class="form-label"></label>
+        <textarea asp-for="Descripcion" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger"></span>
+    </div>
+    <div class="col-12">
+        <div class="form-check form-switch">
+            <input asp-for="Disponible" class="form-check-input" />
+            <label asp-for="Disponible" class="form-check-label">Libro disponible para préstamo</label>
+        </div>
+    </div>
+</div>

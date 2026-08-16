@@ -1,62 +1,68 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - BibliotecaMVC</title>
+    <meta name="description" content="Biblioteca Virtual: libros, autores, categorías y servicios bibliotecarios en un solo lugar." />
+    <title>@ViewData["Title"] - Biblioteca Virtual</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BibliotecaMVC.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">BibliotecaMVC</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+    <a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
+
+    <header class="site-header">
+        <nav class="navbar navbar-expand-lg navbar-dark library-navbar" aria-label="Navegación principal">
+            <div class="container-xl">
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
+                    <span class="brand-mark" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" role="img">
+                            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11a2 2 0 0 1 2 2v15a2 2 0 0 0-2-2H6.5A2.5 2.5 0 0 0 4 20.5v-15Z" />
+                            <path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v17a2 2 0 0 1 2-2h2.5a2.5 2.5 0 0 1 2.5 2.5v-15Z" />
+                        </svg>
+                    </span>
+                    <span>Biblioteca <strong>Virtual</strong></span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation"
+                        aria-controls="mainNavigation" aria-expanded="false" aria-label="Mostrar u ocultar navegación">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Inicio</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Categorias">Categorias</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Autores" asp-action="Index">Autores</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Libros">Libros</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Usuarios">Usuarios</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Prestamos">Prestamos</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Acerca_de">Acerca de</a>
-                        </li>
+                <div class="collapse navbar-collapse" id="mainNavigation">
+                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Inicio</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Categorias">Categorías</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Autores" asp-action="Index">Autores</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Libros" asp-action="Index">Libros</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Usuarios">Usuarios</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Prestamos">Préstamos</a></li>
+                        <li class="nav-item"><a class="nav-link nav-link-highlight" asp-controller="Home" asp-action="Acerca_de">Acerca de</a></li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - BibliotecaMVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <main id="contenido-principal" class="site-main" tabindex="-1">
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer">
+        <div class="container-xl footer-content">
+            <div>
+                <span class="footer-brand">Biblioteca Virtual</span>
+                <p>Historias, conocimiento y comunidad al alcance de todos.</p>
+            </div>
+            <nav aria-label="Navegación secundaria">
+                <a asp-controller="Home" asp-action="Index">Inicio</a>
+                <a asp-controller="Home" asp-action="Acerca_de">Acerca de</a>
+                <a asp-controller="Autores" asp-action="Index">Autores</a>
+            </nav>
+            <small>&copy; 2026 BibliotecaMVC</small>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
