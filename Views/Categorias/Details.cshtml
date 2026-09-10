@@ -1,0 +1,19 @@
+@model Categoria
+@{ ViewData["Title"] = Model.Nombre; }
+
+<section class="module-page">
+    <div class="container-xl">
+        <div class="entity-form-shell">
+            <a class="back-link" asp-action="Index">← Volver a categorías</a>
+            <article class="entity-form-card">
+                <span class="module-kicker">Categoría #@Model.ID</span>
+                <h1>@Model.Nombre</h1>
+                <p class="category-description">@(Model.Descripcion ?? "Sin descripción")</p>
+                <div class="form-actions">
+                    <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.ID">Eliminar</a>
+                    <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.ID">Editar categoría</a>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>

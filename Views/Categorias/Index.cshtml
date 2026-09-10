@@ -1,0 +1,58 @@
+@model IReadOnlyList<Categoria>
+@{ ViewData["Title"] = "Categorías"; }
+
+<section class="module-page">
+    <div class="container-xl">
+        <header class="module-header">
+            <div>
+                <span class="module-kicker">Administración</span>
+                <h1>Categorías de la biblioteca</h1>
+                <p>Organiza los temas de la colección y mantén sus descripciones al día.</p>
+            </div>
+            <a class="btn btn-primary" asp-action="Create">Agregar categoría</a>
+        </header>
+        @if (TempData["Mensaje"] is string mensaje)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="status">
+                @mensaje
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+        }
+        <section class="module-table-card" aria-labelledby="categorias-titulo">
+            <div class="module-card-heading">
+                <div><h2 id="categorias-titulo">Categorías registradas</h2><p>@Model.Count registros en el catálogo</p></div>
+            </div>
+            @if (Model.Count == 0)
+            {
+                <div class="p-4 text-center">
+                    <h3 class="h5">Todavía no hay categorías</h3>
+                    <p>Agrega la primera categoría para comenzar a organizar la colección.</p>
+                    <a class="btn btn-outline-primary" asp-action="Create">Crear una categoría</a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead><tr><th scope="col">Nombre</th><th scope="col">Descripción</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+                        <tbody>
+                        @foreach (var categoria in Model)
+                        {
+                            <tr>
+                                <th scope="row"><a asp-action="Details" asp-route-id="@categoria.ID">@categoria.Nombre</a></th>
+                                <td class="category-description">@(categoria.Descripcion ?? "Sin descripción")</td>
+                                <td>
+                                    <div class="action-group justify-content-end">
+                                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@categoria.ID" aria-label="Editar @categoria.Nombre">Editar</a>
+                                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@categoria.ID" aria-label="Eliminar @categoria.Nombre">Eliminar</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+</section>

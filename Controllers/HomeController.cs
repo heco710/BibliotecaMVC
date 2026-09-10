@@ -23,7 +23,7 @@ namespace BibliotecaMVC.Controllers
 
         public IActionResult Categorias()
         {
-            return View();
+            return RedirectToAction("Index", "Categorias");
         }
         public IActionResult Acerca_de()
         {
