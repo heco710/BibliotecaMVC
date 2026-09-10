@@ -31,7 +31,7 @@ public class Libro
 
     [StringLength(500, ErrorMessage = "La descripción no puede superar los 500 caracteres.")]
     [Display(Name = "Descripción")]
-    public string Descripcion { get; set; } = string.Empty;
+    public string? Descripcion { get; set; }
 
     [Required(ErrorMessage = "Seleccione una imagen.")]
     public string Imagen { get; set; } = "cien-anos-soledad.png";
