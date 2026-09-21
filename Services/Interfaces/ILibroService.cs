@@ -4,9 +4,9 @@ namespace BibliotecaMVC.Services.Interfaces;
 
 public interface ILibroService
 {
-    Task<IReadOnlyList<Libro>> ObtenerTodosAsync();
-    Task<Libro?> ObtenerPorIdAsync(int id);
-    Task<ResultadoOperacion> AgregarAsync(Libro libro);
-    Task<ResultadoOperacion> ActualizarAsync(Libro libro);
-    Task<bool> EliminarAsync(int id);
+    IReadOnlyList<Libro> ObtenerTodos();
+    Libro? ObtenerPorId(int id);
+    ResultadoOperacion Agregar(Libro libro);
+    ResultadoOperacion Actualizar(Libro libro);
+    bool Eliminar(int id);
 }

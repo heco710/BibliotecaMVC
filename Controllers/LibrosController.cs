@@ -6,11 +6,11 @@ namespace BibliotecaMVC.Controllers;
 
 public class LibrosController(ILibroService servicio) : Controller
 {
-    public async Task<IActionResult> Index() => View(await servicio.ObtenerTodosAsync());
+    public IActionResult Index() => View(servicio.ObtenerTodos());
 
-    public async Task<IActionResult> Details(int id)
+    public IActionResult Details(int id)
     {
-        var libro = await servicio.ObtenerPorIdAsync(id);
+        var libro = servicio.ObtenerPorId(id);
         return libro is null ? NotFound() : View(libro);
     }
 
@@ -18,29 +18,29 @@ public class LibrosController(ILibroService servicio) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Libro libro)
+    public IActionResult Create(Libro libro)
     {
         if (!ModelState.IsValid) return View(libro);
-        var resultado = await servicio.AgregarAsync(libro);
+        var resultado = servicio.Agregar(libro);
         ModelState.AgregarErrores(resultado.Errores);
         if (!resultado.Exitoso) return View(libro);
         TempData["Mensaje"] = "El libro se agregó correctamente.";
         return RedirectToAction(nameof(Index));
     }
 
-    public async Task<IActionResult> Edit(int id)
+    public IActionResult Edit(int id)
     {
-        var libro = await servicio.ObtenerPorIdAsync(id);
+        var libro = servicio.ObtenerPorId(id);
         return libro is null ? NotFound() : View(libro);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit([FromRoute] int id, Libro libro)
+    public IActionResult Edit([FromRoute] int id, Libro libro)
     {
         if (id != libro.ID) return BadRequest();
         if (!ModelState.IsValid) return View(libro);
-        var resultado = await servicio.ActualizarAsync(libro);
+        var resultado = servicio.Actualizar(libro);
         if (!resultado.Encontrado) return NotFound();
         ModelState.AgregarErrores(resultado.Errores);
         if (!resultado.Exitoso) return View(libro);
@@ -48,17 +48,17 @@ public class LibrosController(ILibroService servicio) : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public async Task<IActionResult> Delete(int id)
+    public IActionResult Delete(int id)
     {
-        var libro = await servicio.ObtenerPorIdAsync(id);
+        var libro = servicio.ObtenerPorId(id);
         return libro is null ? NotFound() : View(libro);
     }
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed([FromRoute] int id)
+    public IActionResult DeleteConfirmed([FromRoute] int id)
     {
-        if (!await servicio.EliminarAsync(id)) return NotFound();
+        if (!servicio.Eliminar(id)) return NotFound();
         TempData["Mensaje"] = "El libro se eliminó correctamente.";
         return RedirectToAction(nameof(Index));
     }
