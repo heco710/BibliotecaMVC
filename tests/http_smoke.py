@@ -12,7 +12,7 @@ import urllib.parse
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE = "http://127.0.0.1:5198"
+BASE = "http://localhost:5198"
 CONNECTION = os.environ.get("BIBLIOTECA_TEST_CONNECTION", "")
 if not re.search(r"(?:Database|Initial Catalog)\s*=\s*BibliotecaMVC_Test_[A-Za-z0-9_]+(?:;|$)", CONNECTION, re.I):
     raise SystemExit("Set BIBLIOTECA_TEST_CONNECTION to a dedicated BibliotecaMVC_Test_ database.")
@@ -21,7 +21,8 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
 
-client = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()), NoRedirect)
+client = urllib.request.build_opener(urllib.request.ProxyHandler({}),
+                                    urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()), NoRedirect)
 checks = 0
 process = None
 log = tempfile.TemporaryFile()
@@ -103,7 +104,7 @@ try:
             for invalid in ({**values, "Nombre": "n" * 101}, {**values, "Descripcion": "d" * 251}):
                 status, body, _ = post(base + "/Create", invalid)
                 check(status == 200 and "field-validation-error" in body, "Category length HTTP validation")
-        status, _, headers = post(base + "/Create", values)
+        status, _, headers = post(base + "/Create", {**values, "ID": "2147483647"})
         check(status == 302 and headers["Location"] == base, "Create redirects " + controller)
         _, listing, _ = request(base)
         blocks = re.findall(r'<(?:article|tr)\b[^>]*>.*?</(?:article|tr)>', html.unescape(listing), re.S)
@@ -111,6 +112,7 @@ try:
         match = re.search(r'href="' + base + r'/Details/(\d+)"', created)
         check(match is not None, "Created row appears " + controller)
         row_id = match.group(1)
+        check(row_id != "2147483647", "Create ignores supplied ID " + controller)
         check(request(base + "/Details/" + row_id)[0] == 200, "Details " + controller)
         status, _, _ = post(base + "/Edit/" + row_id, {**values, "ID": "2147483647"})
         check(status == 400, "Route/body mismatch " + controller)
@@ -119,10 +121,9 @@ try:
         check("editado" in html.unescape(request(base + "/Details/" + row_id)[1]), "Edit persisted " + controller)
         check(request(base + "/Delete/" + row_id)[0] == 200, "Delete confirmation " + controller)
         check(request(base + "/Details/" + row_id)[0] == 200, "GET Delete must not delete " + controller)
-        if controller == "Categorias":
-            stop()
-            start()
-            check("editado" in html.unescape(request(base + "/Details/" + row_id)[1]), "Category survives application restart")
+        stop()
+        start()
+        check("editado" in html.unescape(request(base + "/Details/" + row_id)[1]), controller + " survives application restart")
         delete_token = token(base + "/Delete/" + row_id)
         check(request(base + "/Delete/" + row_id, {"id": row_id, "__RequestVerificationToken": delete_token})[0] == 302, "Delete POST " + controller)
         check(request(base + "/Delete/" + row_id, {"id": row_id, "__RequestVerificationToken": delete_token})[0] == 404, "Repeated delete " + controller)
@@ -135,10 +136,18 @@ try:
         status, body, _ = request("/Categorias")
         check(status == 503 and "No se pudo completar" in body, "Controlled database failure")
         check("invalid-secret-marker" not in body and "SqlException" not in body, "No database diagnostics in response")
-        check(request("/Libros")[0] == 200, "Memory catalog works without SQL")
+        for controller in ("Libros", "Autores"):
+            status, body, _ = request("/" + controller)
+            check(status == 503 and "No se pudo completar" in body, "Controlled EF failure " + controller)
+            check("invalid-secret-marker" not in body and "SqlException" not in body, "No EF diagnostics " + controller)
+        check(request("/")[0] == 200, "Home still available without SQL")
         check(post("/Categorias/Create", {"Nombre": marker})[0] == 503, "Failed write does not redirect to success")
         stop()
     print(f"PASS: {checks} HTTP checks, including SQL persistence across restart.")
+except Exception:
+    log.seek(0)
+    (ROOT / "tests/http_smoke.log").write_bytes(log.read())
+    raise
 finally:
     stop()
     log.close()

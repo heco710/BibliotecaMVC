@@ -4,9 +4,9 @@ namespace BibliotecaMVC.Repositories;
 
 public interface IRepositorioAutor
 {
-    IReadOnlyList<Autor> ObtenerTodos();
-    Autor? ObtenerPorId(int id);
-    int Agregar(Autor autor);
-    bool Actualizar(Autor autor);
-    bool Eliminar(int id);
+    Task<IReadOnlyList<Autor>> ObtenerTodosAsync();
+    Task<Autor?> ObtenerPorIdAsync(int id);
+    Task<int> AgregarAsync(Autor autor);
+    Task<bool> ActualizarAsync(Autor autor);
+    Task<bool> EliminarAsync(int id);
 }

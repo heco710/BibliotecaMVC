@@ -4,9 +4,9 @@ namespace BibliotecaMVC.Services.Interfaces;
 
 public interface IAutorService
 {
-    IReadOnlyList<Autor> ObtenerTodos();
-    Autor? ObtenerPorId(int id);
-    ResultadoOperacion Agregar(Autor autor);
-    ResultadoOperacion Actualizar(Autor autor);
-    bool Eliminar(int id);
+    Task<IReadOnlyList<Autor>> ObtenerTodosAsync();
+    Task<Autor?> ObtenerPorIdAsync(int id);
+    Task<ResultadoOperacion> AgregarAsync(Autor autor);
+    Task<ResultadoOperacion> ActualizarAsync(Autor autor);
+    Task<bool> EliminarAsync(int id);
 }

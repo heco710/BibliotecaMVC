@@ -480,3 +480,11 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Archivos de trabajo y entregas locales
+/CONTEXTO_PROYECTO.md
+/BibliotecaMVC_Entrega.zip
+/docs/VERIFICACION_SEMANAS_7_8.md
+/docs/REVISION_EF_CORE.md
+/docs/MATERIAL_EF_CORE.json
+/docs/FUENTES_IMAGENES.json

@@ -4,15 +4,14 @@
     ViewData["Title"] = "Detalle del autor";
 }
 
-<main class="module-page">
+<section class="module-page">
     <div class="container-xl">
         <div class="entity-form-shell">
             <a class="back-link" asp-action="Index">← Volver a autores</a>
             <article class="detail-card">
                 <div class="detail-card-top">
-                    <span class="entity-avatar entity-avatar-large" aria-hidden="true">@Model.Nombre[0]@Model.Apellido[0]</span>
+                    <partial name="_Retrato" model="Model" />
                     <div>
-                        <span class="module-kicker">Autor #@Model.ID</span>
                         <h1>@Model.Nombre @Model.Apellido</h1>
                         <span class="status-badge @(Model.Activo ? "status-active" : "status-inactive")">
                             @(Model.Activo ? "Activo" : "Inactivo")
@@ -30,4 +29,4 @@
             </article>
         </div>
     </div>
-</main>
+</section>

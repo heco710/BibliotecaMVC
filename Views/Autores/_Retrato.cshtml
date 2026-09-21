@@ -1,0 +1,21 @@
+@model Autor
+@{
+    var foto = $"{Model.Nombre.Trim()} {Model.Apellido.Trim()}" switch
+    {
+        "Gabriel García Márquez" => "gabriel-garcia-marquez.jpg",
+        "Isabel Allende" => "isabel-allende.jpg",
+        "Jorge Luis Borges" => "jorge-luis-borges.jpg",
+        "Laura Esquivel" => "laura-esquivel.jpg",
+        "Miguel Ángel Asturias" => "miguel-angel-asturias.jpg",
+        _ => null
+    };
+}
+@if (foto is not null)
+{
+    <img class="author-portrait" src="~/images/autores/@foto" asp-append-version="true"
+         alt="Retrato de @Model.Nombre @Model.Apellido" loading="lazy" width="80" height="100" />
+}
+else
+{
+    <span class="author-portrait portrait-missing">Sin foto</span>
+}
