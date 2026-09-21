@@ -4,13 +4,12 @@
     ViewData["Title"] = "Eliminar autor";
 }
 
-<main class="module-page">
+<section class="module-page">
     <div class="container-xl">
         <div class="entity-form-shell entity-form-shell-narrow">
             <a class="back-link" asp-action="Index">← Volver a autores</a>
             <article class="danger-panel">
                 <span class="danger-mark" aria-hidden="true">!</span>
-                <span class="module-kicker">Confirmación requerida</span>
                 <h1>Eliminar autor</h1>
                 <p>Vas a eliminar a <strong>@Model.Nombre @Model.Apellido</strong>. Esta acción actualizará inmediatamente el listado.</p>
                 <dl class="detail-list compact">
@@ -24,4 +23,4 @@
             </article>
         </div>
     </div>
-</main>
+</section>

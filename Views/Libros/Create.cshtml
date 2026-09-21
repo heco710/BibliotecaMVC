@@ -4,14 +4,13 @@
     ViewData["Title"] = "Agregar libro";
 }
 
-<main class="module-page">
+<section class="module-page">
     <div class="container-xl">
         <div class="entity-form-shell">
             <a class="back-link" asp-action="Index">← Volver al catálogo</a>
             <header class="entity-form-header">
-                <span class="module-kicker">Nueva obra</span>
                 <h1>Agregar libro</h1>
-                <p>Registra una obra y selecciona una imagen representativa.</p>
+                <p>Completa los datos del libro.</p>
             </header>
             <form asp-action="Create" method="post" class="entity-form-card">
                 <partial name="_Form" model="Model" />
@@ -22,7 +21,7 @@
             </form>
         </div>
     </div>
-</main>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

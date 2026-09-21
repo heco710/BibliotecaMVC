@@ -34,6 +34,7 @@ public class Libro
     public string? Descripcion { get; set; }
 
     [Required(ErrorMessage = "Seleccione una imagen.")]
+    [StringLength(100)]
     public string Imagen { get; set; } = "cien-anos-soledad.png";
 
     public bool Disponible { get; set; }

@@ -1,3 +1,7 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -14,7 +18,7 @@
     <a class="skip-link" href="#contenido-principal">Saltar al contenido</a>
 
     <header class="site-header">
-        <nav class="navbar navbar-expand-lg navbar-dark library-navbar" aria-label="Navegación principal">
+        <nav class="navbar navbar-expand-lg navbar-light library-navbar" aria-label="Navegación principal">
             <div class="container-xl">
                 <a class="navbar-brand d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
                     <span class="brand-mark" aria-hidden="true">
@@ -31,13 +35,13 @@
                 </button>
                 <div class="collapse navbar-collapse" id="mainNavigation">
                     <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Inicio</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Categorias" asp-action="Index">Categorías</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Autores" asp-action="Index">Autores</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Libros" asp-action="Index">Libros</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Usuarios">Usuarios</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Prestamos">Préstamos</a></li>
-                        <li class="nav-item"><a class="nav-link nav-link-highlight" asp-controller="Home" asp-action="Acerca_de">Acerca de</a></li>
+                        <li class="nav-item"><a class="nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")" aria-current="@(currentController == "Home" && currentAction == "Index" ? "page" : null)" asp-controller="Home" asp-action="Index">Inicio</a></li>
+                        <li class="nav-item"><a class="nav-link @(currentController == "Categorias" ? "active" : "")" aria-current="@(currentController == "Categorias" ? "page" : null)" asp-controller="Categorias" asp-action="Index">Categorías</a></li>
+                        <li class="nav-item"><a class="nav-link @(currentController == "Autores" ? "active" : "")" aria-current="@(currentController == "Autores" ? "page" : null)" asp-controller="Autores" asp-action="Index">Autores</a></li>
+                        <li class="nav-item"><a class="nav-link @(currentController == "Libros" ? "active" : "")" aria-current="@(currentController == "Libros" ? "page" : null)" asp-controller="Libros" asp-action="Index">Libros</a></li>
+                        <li class="nav-item"><a class="nav-link @(currentController == "Home" && currentAction == "Usuarios" ? "active" : "")" aria-current="@(currentController == "Home" && currentAction == "Usuarios" ? "page" : null)" asp-controller="Home" asp-action="Usuarios">Usuarios <span class="nav-pending">Próximamente</span></a></li>
+                        <li class="nav-item"><a class="nav-link @(currentController == "Home" && currentAction == "Prestamos" ? "active" : "")" aria-current="@(currentController == "Home" && currentAction == "Prestamos" ? "page" : null)" asp-controller="Home" asp-action="Prestamos">Préstamos <span class="nav-pending">Próximamente</span></a></li>
+                        <li class="nav-item"><a class="nav-link @(currentController == "Home" && currentAction == "Acerca_de" ? "active" : "")" aria-current="@(currentController == "Home" && currentAction == "Acerca_de" ? "page" : null)" asp-controller="Home" asp-action="Acerca_de">Acerca de</a></li>
                     </ul>
                 </div>
             </div>
@@ -52,12 +56,12 @@
         <div class="container-xl footer-content">
             <div>
                 <span class="footer-brand">Biblioteca Virtual</span>
-                <p>Historias, conocimiento y comunidad al alcance de todos.</p>
+                <p>Libros, autores y categorías.</p>
             </div>
             <nav aria-label="Navegación secundaria">
                 <a asp-controller="Home" asp-action="Index">Inicio</a>
                 <a asp-controller="Home" asp-action="Acerca_de">Acerca de</a>
-                <a asp-controller="Autores" asp-action="Index">Autores</a>
+                <a asp-controller="Home" asp-action="Creditos">Créditos de imágenes</a>
             </nav>
             <small>&copy; 2026 BibliotecaMVC</small>
         </div>

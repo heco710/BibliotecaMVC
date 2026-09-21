@@ -4,12 +4,11 @@
     ViewData["Title"] = "Editar libro";
 }
 
-<main class="module-page">
+<section class="module-page">
     <div class="container-xl">
         <div class="entity-form-shell">
             <a class="back-link" asp-action="Index">← Volver al catálogo</a>
             <header class="entity-form-header">
-                <span class="module-kicker">Libro #@Model.ID</span>
                 <h1>Editar libro</h1>
                 <p>Actualiza sus datos, disponibilidad o imagen.</p>
             </header>
@@ -23,7 +22,7 @@
             </form>
         </div>
     </div>
-</main>
+</section>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

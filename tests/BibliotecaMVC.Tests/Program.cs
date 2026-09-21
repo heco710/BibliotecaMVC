@@ -1,3 +1,5 @@
+using BibliotecaMVC.Data;
+using Microsoft.EntityFrameworkCore;
 using BibliotecaMVC.Models;
 using BibliotecaMVC.Repositories;
 using BibliotecaMVC.Services;
@@ -11,55 +13,23 @@ void Check(bool condition, string message)
     checks++;
 }
 
-var libros = new RepositorioLibrosEnMemoria();
-var libroService = new LibroService(libros);
-var libro = libros.ObtenerPorId(1)!;
-libro.Titulo = "Copia modificada";
-Check(libros.ObtenerPorId(1)!.Titulo != libro.Titulo, "Lectura de libro debe ser una copia");
-libros.ObtenerTodos()[0].Titulo = "No modificar almacenamiento";
-Check(libros.ObtenerPorId(1)!.Titulo != "No modificar almacenamiento", "Lista debe contener copias");
-var firstId = libros.Agregar(libro);
-libro.Titulo = "Modificado después de guardar";
-Check(libros.ObtenerPorId(firstId)!.Titulo != libro.Titulo, "Agregar debe copiar la entrada");
-Check(libros.Eliminar(firstId), "Eliminar existente");
-Check(libros.Agregar(libro) > firstId, "No reutilizar ID eliminado");
-var ids = new System.Collections.Concurrent.ConcurrentBag<int>();
-Parallel.For(0, 100, _ => ids.Add(libros.Agregar(libro)));
-Check(ids.Distinct().Count() == 100, "Altas concurrentes deben tener IDs únicos");
-Check(!libros.Actualizar(new Libro { ID = int.MaxValue }), "Actualizar inexistente");
-Check(!libros.Eliminar(int.MaxValue), "Eliminar inexistente");
-var invalidBook = libros.ObtenerPorId(1)!;
-invalidBook.AnioPublicacion = DateTime.Today.Year + 1;
-Check(!libroService.Actualizar(invalidBook).Exitoso, "Rechazar publicación futura");
-Check(libros.ObtenerPorId(1)!.AnioPublicacion != invalidBook.AnioPublicacion, "Validación no debe mutar datos");
+// Las entradas inválidas deben rechazarse antes de intentar conectar a SQL Server.
+using var validationContext = new BibliotecaContext(new DbContextOptionsBuilder<BibliotecaContext>()
+    .UseSqlServer("Server=127.0.0.1,1;Database=validation;Integrated Security=True;Connect Timeout=1").Options);
+var libroService = new LibroService(new RepositorioLibrosEf(validationContext));
+var invalidBook = new Libro { Titulo = "Prueba", Autor = "Autora", Categoria = "Novela", ISBN = "978-123",
+    AnioPublicacion = DateTime.Today.Year + 1, Imagen = "ficciones.png" };
+Check(!(await libroService.AgregarAsync(invalidBook)).Exitoso, "Rechazar publicación futura antes de SQL");
 invalidBook.AnioPublicacion = 2020;
 invalidBook.Imagen = "../../secret.txt";
-Check(!libroService.Agregar(invalidBook).Exitoso, "Rechazar imagen fuera del catálogo");
+Check(!(await libroService.AgregarAsync(invalidBook)).Exitoso, "Rechazar imagen fuera del catálogo");
 invalidBook.Imagen = "ficciones.png";
 invalidBook.Titulo = "";
-Check(!libroService.Agregar(invalidBook).Exitoso, "Validar DataAnnotations sin MVC");
-invalidBook.Titulo = "Descripción opcional";
-invalidBook.Descripcion = null;
-Check(libroService.Agregar(invalidBook).Exitoso, "Descripción de libro opcional");
-
-var autores = new RepositorioAutoresEnMemoria();
-var autorService = new AutorService(autores);
-var autor = autores.ObtenerPorId(1)!;
-autor.Nombre = "Copia";
-Check(autores.ObtenerPorId(1)!.Nombre != autor.Nombre, "Autor debe ser una copia");
-autores.ObtenerTodos()[0].Apellido = "Copia de lista";
-Check(autores.ObtenerPorId(1)!.Apellido != "Copia de lista", "Lista de autores debe copiar");
-autor.FechaNacimiento = DateTime.Today.AddDays(1);
-Check(!autorService.Actualizar(autor).Exitoso, "Rechazar nacimiento futuro");
-Check(autores.ObtenerPorId(1)!.Nombre != "Copia", "Autor inválido no debe mutar datos");
-autor.FechaNacimiento = new DateTime(2000, 1, 1);
-var autorId = autores.Agregar(autor);
-autor.Nombre = "Cambio después de guardar";
-Check(autores.ObtenerPorId(autorId)!.Nombre != autor.Nombre, "Agregar autor debe copiar");
-Check(autores.Eliminar(autorId) && autores.Agregar(autor) > autorId, "IDs de autor no se reutilizan");
-ids.Clear();
-Parallel.For(0, 100, _ => ids.Add(autores.Agregar(autor)));
-Check(ids.Distinct().Count() == 100, "IDs concurrentes de autor");
+Check(!(await libroService.AgregarAsync(invalidBook)).Exitoso, "Validar DataAnnotations sin MVC");
+var autorService = new AutorService(new RepositorioAutoresEf(validationContext));
+Check(!(await autorService.AgregarAsync(new Autor { Nombre = "Ana", Apellido = "Pérez", Nacionalidad = "Guatemalteca",
+    FechaNacimiento = DateTime.Today.AddDays(1) })).Exitoso, "Rechazar nacimiento futuro antes de SQL");
+Check(!validationContext.ChangeTracker.HasChanges(), "La validación no registra cambios en EF");
 
 var fake = new CategoriaFake();
 var categoriaService = new CategoriaService(fake);
@@ -78,6 +48,80 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     var builder = new SqlConnectionStringBuilder(connectionString);
     if (!builder.InitialCatalog.StartsWith("BibliotecaMVC_Test_", StringComparison.Ordinal))
         throw new Exception("SQL tests require a dedicated BibliotecaMVC_Test_ database.");
+    var options = new DbContextOptionsBuilder<BibliotecaContext>().UseSqlServer(connectionString).Options;
+    await using (var schema = new BibliotecaContext(options))
+    {
+        await schema.Database.MigrateAsync();
+        Check(!schema.Database.HasPendingModelChanges(), "Modelo y migración coinciden");
+    }
+    var book = new Libro { ID = 999, Titulo = "Niñez ' y libros", Autor = "Autora", Categoria = "Novela",
+        AnioPublicacion = 2020, ISBN = "978-123", Imagen = "ficciones.png", Disponible = true };
+    var author = new Autor { ID = 999, Nombre = "María", Apellido = "O'Neill", Nacionalidad = "Guatemalteca",
+        FechaNacimiento = new DateTime(2000, 1, 1), Activo = true };
+    int bookCount, authorCount;
+    await using (var before = new BibliotecaContext(options))
+    {
+        bookCount = await before.Libros.CountAsync();
+        authorCount = await before.Autores.CountAsync();
+    }
+    try
+    {
+        await using (var create = new BibliotecaContext(options))
+        {
+            Check((await new LibroService(new RepositorioLibrosEf(create)).AgregarAsync(book)).Exitoso && book.ID > 0 && book.ID != 999,
+                "EF agrega libro con identidad de SQL, ignorando el ID recibido");
+            Check((await new AutorService(new RepositorioAutoresEf(create)).AgregarAsync(author)).Exitoso && author.ID > 0 && author.ID != 999,
+                "EF agrega autor con identidad de SQL");
+        }
+        await using (var read = new BibliotecaContext(options))
+        {
+            var savedBook = await new RepositorioLibrosEf(read).ObtenerPorIdAsync(book.ID);
+            Check(savedBook?.Titulo == book.Titulo && savedBook.Descripcion is null && savedBook.Disponible,
+                "EF conserva Unicode, apóstrofes, NULL y disponibilidad entre contextos");
+            var savedAuthor = await new RepositorioAutoresEf(read).ObtenerPorIdAsync(author.ID);
+            Check(savedAuthor?.Apellido == author.Apellido && savedAuthor.FechaNacimiento == author.FechaNacimiento && savedAuthor.Activo,
+                "EF conserva autor y fecha entre contextos");
+        }
+        book.Titulo = "Libro editado"; book.Descripcion = new string('ñ', 500); book.Disponible = false;
+        author.Nombre = "Autora editada"; author.Activo = false;
+        await using (var edit = new BibliotecaContext(options))
+        {
+            Check((await new LibroService(new RepositorioLibrosEf(edit)).ActualizarAsync(book)).Exitoso, "EF UPDATE libro");
+            Check((await new AutorService(new RepositorioAutoresEf(edit)).ActualizarAsync(author)).Exitoso, "EF UPDATE autor");
+        }
+        await using (var read = new BibliotecaContext(options))
+        {
+            await read.Database.MigrateAsync();
+            var savedBook = await read.Libros.FindAsync(book.ID);
+            var savedAuthor = await read.Autores.FindAsync(author.ID);
+            Check(savedBook?.Titulo == book.Titulo && savedBook.Descripcion == book.Descripcion && !savedBook.Disponible,
+                "Edición de libro persiste y repetir migración no la sobrescribe");
+            Check(savedAuthor?.Nombre == author.Nombre && !savedAuthor.Activo, "Edición de autor persiste");
+            Check((await new RepositorioLibrosEf(read).ObtenerTodosAsync()).Any(item => item.ID == book.ID), "EF listado de libros");
+            Check((await new RepositorioAutoresEf(read).ObtenerTodosAsync()).Any(item => item.ID == author.ID), "EF listado de autores");
+        }
+        await using (var delete = new BibliotecaContext(options))
+        {
+            Check(await new RepositorioLibrosEf(delete).EliminarAsync(book.ID), "EF DELETE libro");
+            Check(await new RepositorioAutoresEf(delete).EliminarAsync(author.ID), "EF DELETE autor");
+        }
+        await using (var missing = new BibliotecaContext(options))
+        {
+            var books = new RepositorioLibrosEf(missing); var authors = new RepositorioAutoresEf(missing);
+            Check(await books.ObtenerPorIdAsync(book.ID) is null && await authors.ObtenerPorIdAsync(author.ID) is null,
+                "Filas eliminadas no existen en un contexto nuevo");
+            Check(!await books.ActualizarAsync(book) && !await authors.ActualizarAsync(author), "No insertar al editar un ID inexistente");
+            Check(!await books.EliminarAsync(book.ID) && !await authors.EliminarAsync(author.ID), "Eliminar dos veces devuelve no encontrado");
+            Check(await missing.Libros.CountAsync() == bookCount && await missing.Autores.CountAsync() == authorCount,
+                "Pruebas conservan los registros anteriores");
+        }
+    }
+    finally
+    {
+        await using var cleanup = new BibliotecaContext(options);
+        if (book.ID != 999) await new RepositorioLibrosEf(cleanup).EliminarAsync(book.ID);
+        if (author.ID != 999) await new RepositorioAutoresEf(cleanup).EliminarAsync(author.ID);
+    }
     var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
     {
         ["ConnectionStrings:BibliotecaDB"] = connectionString

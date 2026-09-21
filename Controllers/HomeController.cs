@@ -29,6 +29,8 @@ namespace BibliotecaMVC.Controllers
         {
             return View();
         }
+        public IActionResult Creditos() => View();
+
         public IActionResult Prestamos()
         {
             return View();
