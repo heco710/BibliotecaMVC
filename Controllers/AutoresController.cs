@@ -6,11 +6,11 @@ namespace BibliotecaMVC.Controllers;
 
 public class AutoresController(IAutorService servicio) : Controller
 {
-    public IActionResult Index() => View(servicio.ObtenerTodos());
+    public async Task<IActionResult> Index() => View(await servicio.ObtenerTodosAsync());
 
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        var autor = servicio.ObtenerPorId(id);
+        var autor = await servicio.ObtenerPorIdAsync(id);
         return autor is null ? NotFound() : View(autor);
     }
 
@@ -18,29 +18,29 @@ public class AutoresController(IAutorService servicio) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(Autor autor)
+    public async Task<IActionResult> Create(Autor autor)
     {
         if (!ModelState.IsValid) return View(autor);
-        var resultado = servicio.Agregar(autor);
+        var resultado = await servicio.AgregarAsync(autor);
         ModelState.AgregarErrores(resultado.Errores);
         if (!resultado.Exitoso) return View(autor);
         TempData["Mensaje"] = "El autor se agregó correctamente.";
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Edit(int id)
+    public async Task<IActionResult> Edit(int id)
     {
-        var autor = servicio.ObtenerPorId(id);
+        var autor = await servicio.ObtenerPorIdAsync(id);
         return autor is null ? NotFound() : View(autor);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit([FromRoute] int id, Autor autor)
+    public async Task<IActionResult> Edit([FromRoute] int id, Autor autor)
     {
         if (id != autor.ID) return BadRequest();
         if (!ModelState.IsValid) return View(autor);
-        var resultado = servicio.Actualizar(autor);
+        var resultado = await servicio.ActualizarAsync(autor);
         if (!resultado.Encontrado) return NotFound();
         ModelState.AgregarErrores(resultado.Errores);
         if (!resultado.Exitoso) return View(autor);
@@ -48,17 +48,17 @@ public class AutoresController(IAutorService servicio) : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var autor = servicio.ObtenerPorId(id);
+        var autor = await servicio.ObtenerPorIdAsync(id);
         return autor is null ? NotFound() : View(autor);
     }
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed([FromRoute] int id)
+    public async Task<IActionResult> DeleteConfirmed([FromRoute] int id)
     {
-        if (!servicio.Eliminar(id)) return NotFound();
+        if (!await servicio.EliminarAsync(id)) return NotFound();
         TempData["Mensaje"] = "El autor se eliminó correctamente.";
         return RedirectToAction(nameof(Index));
     }

@@ -5,9 +5,8 @@
     <div class="container-xl">
         <header class="module-header">
             <div>
-                <span class="module-kicker">Administración</span>
-                <h1>Categorías de la biblioteca</h1>
-                <p>Organiza los temas de la colección y mantén sus descripciones al día.</p>
+                <h1 id="categorias-titulo">Categorías</h1>
+                <p>@Model.Count categorías registradas.</p>
             </div>
             <a class="btn btn-primary" asp-action="Create">Agregar categoría</a>
         </header>
@@ -19,9 +18,6 @@
             </div>
         }
         <section class="module-table-card" aria-labelledby="categorias-titulo">
-            <div class="module-card-heading">
-                <div><h2 id="categorias-titulo">Categorías registradas</h2><p>@Model.Count registros en el catálogo</p></div>
-            </div>
             @if (Model.Count == 0)
             {
                 <div class="p-4 text-center">
@@ -32,8 +28,8 @@
             }
             else
             {
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0">
+                <div class="table-responsive" tabindex="0" role="region" aria-label="Categorías; desplaza horizontalmente para ver todas las columnas">
+                    <table class="table category-table align-middle mb-0">
                         <thead><tr><th scope="col">Nombre</th><th scope="col">Descripción</th><th scope="col" class="text-end">Acciones</th></tr></thead>
                         <tbody>
                         @foreach (var categoria in Model)
@@ -43,8 +39,8 @@
                                 <td class="category-description">@(categoria.Descripcion ?? "Sin descripción")</td>
                                 <td>
                                     <div class="action-group justify-content-end">
-                                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@categoria.ID" aria-label="Editar @categoria.Nombre">Editar</a>
-                                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@categoria.ID" aria-label="Eliminar @categoria.Nombre">Eliminar</a>
+                                        <a class="row-action" asp-action="Edit" asp-route-id="@categoria.ID" aria-label="Editar @categoria.Nombre">Editar</a>
+                                        <a class="row-action row-action-danger" asp-action="Delete" asp-route-id="@categoria.ID" aria-label="Eliminar @categoria.Nombre">Eliminar</a>
                                     </div>
                                 </td>
                             </tr>

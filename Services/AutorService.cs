@@ -7,23 +7,24 @@ namespace BibliotecaMVC.Services;
 
 public sealed class AutorService(IRepositorioAutor repositorio) : IAutorService
 {
-    public IReadOnlyList<Autor> ObtenerTodos() => repositorio.ObtenerTodos().OrderBy(item => item.Apellido).ToList();
-    public Autor? ObtenerPorId(int id) => repositorio.ObtenerPorId(id);
-    public bool Eliminar(int id) => repositorio.Eliminar(id);
+    public Task<IReadOnlyList<Autor>> ObtenerTodosAsync() => repositorio.ObtenerTodosAsync();
+    public Task<Autor?> ObtenerPorIdAsync(int id) => repositorio.ObtenerPorIdAsync(id);
+    public Task<bool> EliminarAsync(int id) => repositorio.EliminarAsync(id);
 
-    public ResultadoOperacion Agregar(Autor autor)
+    public async Task<ResultadoOperacion> AgregarAsync(Autor autor)
     {
         var errores = Validar(autor);
         if (errores.Count > 0) return new(true, errores);
-        autor.ID = repositorio.Agregar(autor);
+        autor.ID = 0;
+        autor.ID = await repositorio.AgregarAsync(autor);
         return new(true, []);
     }
 
-    public ResultadoOperacion Actualizar(Autor autor)
+    public async Task<ResultadoOperacion> ActualizarAsync(Autor autor)
     {
         var errores = Validar(autor);
         if (errores.Count > 0) return new(true, errores);
-        return new(repositorio.Actualizar(autor), []);
+        return new(await repositorio.ActualizarAsync(autor), []);
     }
 
     private static List<ValidationResult> Validar(Autor autor)
