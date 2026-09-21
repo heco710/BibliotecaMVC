@@ -19,13 +19,13 @@ using var validationContext = new BibliotecaContext(new DbContextOptionsBuilder<
 var libroService = new LibroService(new RepositorioLibrosEf(validationContext));
 var invalidBook = new Libro { Titulo = "Prueba", Autor = "Autora", Categoria = "Novela", ISBN = "978-123",
     AnioPublicacion = DateTime.Today.Year + 1, Imagen = "ficciones.png" };
-Check(!(await libroService.AgregarAsync(invalidBook)).Exitoso, "Rechazar publicación futura antes de SQL");
+Check(!(libroService.Agregar(invalidBook)).Exitoso, "Rechazar publicación futura antes de SQL");
 invalidBook.AnioPublicacion = 2020;
 invalidBook.Imagen = "../../secret.txt";
-Check(!(await libroService.AgregarAsync(invalidBook)).Exitoso, "Rechazar imagen fuera del catálogo");
+Check(!(libroService.Agregar(invalidBook)).Exitoso, "Rechazar imagen fuera del catálogo");
 invalidBook.Imagen = "ficciones.png";
 invalidBook.Titulo = "";
-Check(!(await libroService.AgregarAsync(invalidBook)).Exitoso, "Validar DataAnnotations sin MVC");
+Check(!(libroService.Agregar(invalidBook)).Exitoso, "Validar DataAnnotations sin MVC");
 var autorService = new AutorService(new RepositorioAutoresEf(validationContext));
 Check(!(await autorService.AgregarAsync(new Autor { Nombre = "Ana", Apellido = "Pérez", Nacionalidad = "Guatemalteca",
     FechaNacimiento = DateTime.Today.AddDays(1) })).Exitoso, "Rechazar nacimiento futuro antes de SQL");
@@ -68,14 +68,14 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     {
         await using (var create = new BibliotecaContext(options))
         {
-            Check((await new LibroService(new RepositorioLibrosEf(create)).AgregarAsync(book)).Exitoso && book.ID > 0 && book.ID != 999,
+            Check((new LibroService(new RepositorioLibrosEf(create)).Agregar(book)).Exitoso && book.ID > 0 && book.ID != 999,
                 "EF agrega libro con identidad de SQL, ignorando el ID recibido");
             Check((await new AutorService(new RepositorioAutoresEf(create)).AgregarAsync(author)).Exitoso && author.ID > 0 && author.ID != 999,
                 "EF agrega autor con identidad de SQL");
         }
         await using (var read = new BibliotecaContext(options))
         {
-            var savedBook = await new RepositorioLibrosEf(read).ObtenerPorIdAsync(book.ID);
+            var savedBook = new RepositorioLibrosEf(read).ObtenerPorId(book.ID);
             Check(savedBook?.Titulo == book.Titulo && savedBook.Descripcion is null && savedBook.Disponible,
                 "EF conserva Unicode, apóstrofes, NULL y disponibilidad entre contextos");
             var savedAuthor = await new RepositorioAutoresEf(read).ObtenerPorIdAsync(author.ID);
@@ -86,7 +86,7 @@ if (!string.IsNullOrWhiteSpace(connectionString))
         author.Nombre = "Autora editada"; author.Activo = false;
         await using (var edit = new BibliotecaContext(options))
         {
-            Check((await new LibroService(new RepositorioLibrosEf(edit)).ActualizarAsync(book)).Exitoso, "EF UPDATE libro");
+            Check((new LibroService(new RepositorioLibrosEf(edit)).Actualizar(book)).Exitoso, "EF UPDATE libro");
             Check((await new AutorService(new RepositorioAutoresEf(edit)).ActualizarAsync(author)).Exitoso, "EF UPDATE autor");
         }
         await using (var read = new BibliotecaContext(options))
@@ -97,21 +97,21 @@ if (!string.IsNullOrWhiteSpace(connectionString))
             Check(savedBook?.Titulo == book.Titulo && savedBook.Descripcion == book.Descripcion && !savedBook.Disponible,
                 "Edición de libro persiste y repetir migración no la sobrescribe");
             Check(savedAuthor?.Nombre == author.Nombre && !savedAuthor.Activo, "Edición de autor persiste");
-            Check((await new RepositorioLibrosEf(read).ObtenerTodosAsync()).Any(item => item.ID == book.ID), "EF listado de libros");
+            Check((new RepositorioLibrosEf(read).ObtenerTodos()).Any(item => item.ID == book.ID), "EF listado de libros");
             Check((await new RepositorioAutoresEf(read).ObtenerTodosAsync()).Any(item => item.ID == author.ID), "EF listado de autores");
         }
         await using (var delete = new BibliotecaContext(options))
         {
-            Check(await new RepositorioLibrosEf(delete).EliminarAsync(book.ID), "EF DELETE libro");
+            Check(new RepositorioLibrosEf(delete).Eliminar(book.ID), "EF DELETE libro");
             Check(await new RepositorioAutoresEf(delete).EliminarAsync(author.ID), "EF DELETE autor");
         }
         await using (var missing = new BibliotecaContext(options))
         {
             var books = new RepositorioLibrosEf(missing); var authors = new RepositorioAutoresEf(missing);
-            Check(await books.ObtenerPorIdAsync(book.ID) is null && await authors.ObtenerPorIdAsync(author.ID) is null,
+            Check(books.ObtenerPorId(book.ID) is null && await authors.ObtenerPorIdAsync(author.ID) is null,
                 "Filas eliminadas no existen en un contexto nuevo");
-            Check(!await books.ActualizarAsync(book) && !await authors.ActualizarAsync(author), "No insertar al editar un ID inexistente");
-            Check(!await books.EliminarAsync(book.ID) && !await authors.EliminarAsync(author.ID), "Eliminar dos veces devuelve no encontrado");
+            Check(!books.Actualizar(book) && !await authors.ActualizarAsync(author), "No insertar al editar un ID inexistente");
+            Check(!books.Eliminar(book.ID) && !await authors.EliminarAsync(author.ID), "Eliminar dos veces devuelve no encontrado");
             Check(await missing.Libros.CountAsync() == bookCount && await missing.Autores.CountAsync() == authorCount,
                 "Pruebas conservan los registros anteriores");
         }
@@ -119,7 +119,7 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     finally
     {
         await using var cleanup = new BibliotecaContext(options);
-        if (book.ID != 999) await new RepositorioLibrosEf(cleanup).EliminarAsync(book.ID);
+        if (book.ID != 999) new RepositorioLibrosEf(cleanup).Eliminar(book.ID);
         if (author.ID != 999) await new RepositorioAutoresEf(cleanup).EliminarAsync(author.ID);
     }
     var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
