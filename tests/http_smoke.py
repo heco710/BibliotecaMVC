@@ -21,11 +21,109 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
 
+cookies = http.cookiejar.CookieJar()
 client = urllib.request.build_opener(urllib.request.ProxyHandler({}),
-                                    urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()), NoRedirect)
+                                    urllib.request.HTTPCookieProcessor(cookies), NoRedirect)
 checks = 0
 process = None
 log = tempfile.TemporaryFile()
+test_user = "identity_test_" + str(time.time_ns())
+test_email = test_user + "@example.test"
+
+def identity_sql(cleanup=False):
+    # Only inspect/delete the exact temporary account in the dedicated test database.
+    script = r'''
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.Data
+$connection = New-Object System.Data.SqlClient.SqlConnection $env:BIBLIOTECA_TEST_CONNECTION
+try {
+    $connection.Open()
+    $command = $connection.CreateCommand()
+    $command.CommandText = if ($env:BIBLIOTECA_IDENTITY_CLEANUP -eq '1') {
+        'DELETE FROM dbo.AspNetUsers WHERE UserName = @user'
+    } else {
+        'SELECT COUNT(*) FROM dbo.AspNetUsers WHERE UserName = @user AND PasswordHash IS NOT NULL AND LEN(PasswordHash) > 50'
+    }
+    [void]$command.Parameters.Add('@user', [Data.SqlDbType]::NVarChar, 256)
+    $command.Parameters['@user'].Value = $env:BIBLIOTECA_IDENTITY_TEST_USER
+    if ($env:BIBLIOTECA_IDENTITY_CLEANUP -eq '1') { [void]$command.ExecuteNonQuery() }
+    else { $command.ExecuteScalar() }
+} finally { $connection.Dispose() }
+'''
+    result = subprocess.run(["powershell.exe", "-NoProfile", "-Command", script],
+                            env={**os.environ, "BIBLIOTECA_IDENTITY_TEST_USER": test_user,
+                                 "BIBLIOTECA_IDENTITY_CLEANUP": "1" if cleanup else "0"},
+                            check=True, capture_output=True, text=True)
+    return result.stdout.strip()
+
+def authenticated():
+    body = request("/Home/Usuarios")[1]
+    return test_user in body and 'action="/Account/Logout"' in body
+
+def identity_cookie():
+    return next((cookie for cookie in cookies if cookie.name == "BibliotecaMVC.Identity"), None)
+
+def authentication_checks():
+    account = {"Usuario": test_user, "Email": test_email,
+               "Password": "Prueba-Identity9!", "ConfirmarPassword": "Prueba-Identity9!"}
+    check(not authenticated(), "Initially anonymous")
+    check(request("/Account/Register", account)[0] == 400, "Register requires antiforgery")
+    for invalid, message in (
+        ({**account, "Usuario": ""}, "Ingresa un nombre"),
+        ({**account, "Usuario": "otro@example.test"}, "Usa letras"),
+        ({**account, "Email": "invalid"}, "correo electr"),
+        ({**account, "ConfirmarPassword": "Otra-Password9!"}, "no coinciden"),
+        ({**account, "Password": "abcdefgh", "ConfirmarPassword": "abcdefgh"}, "mayúscula"),
+    ):
+        status, body, _ = post("/Account/Register", invalid)
+        check(status == 200 and message in html.unescape(body), "Register rejects invalid input: " + message)
+        check(not authenticated(), "Invalid registration does not authenticate")
+    status, _, headers = post("/Account/Register", {**account, "ReturnUrl": "https://example.test/"})
+    check(status == 302 and headers["Location"] == "/", "Registration rejects external return URL")
+    check(authenticated(), "Registration signs in")
+    cookie = identity_cookie()
+    check(cookie is not None and cookie.discard and cookie.expires is None, "Registration session cookie")
+    check(identity_sql() == "1", "Exactly one user stored with password hash")
+    check(request("/Account/Logout")[0] in (404, 405) and authenticated(), "GET cannot log out")
+    check(request("/Account/Logout", {})[0] == 400 and authenticated(), "Logout requires antiforgery")
+    check(post("/Account/Logout", {}, "/Home/Usuarios")[0] == 302 and not authenticated(), "POST logs out")
+    check(identity_cookie() is None, "Logout removes identity cookie")
+    for duplicate, message in (
+        ({**account, "Email": "another@example.test"}, "nombre de usuario ya"),
+        ({**account, "Usuario": test_user + "_other", "Email": test_email.upper()}, "correo electrónico ya"),
+    ):
+        status, body, _ = post("/Account/Register", duplicate)
+        check(status == 200 and message in html.unescape(body) and not authenticated(), "Duplicate rejected: " + message)
+    login = {"UsuarioOCorreo": test_user, "Password": account["Password"]}
+    check(request("/Account/Login", login)[0] == 400, "Login requires antiforgery")
+    for invalid in ({**login, "UsuarioOCorreo": ""}, {**login, "Password": ""}):
+        status, body, _ = post("/Account/Login", invalid)
+        check(status == 200 and "field-validation-error" in body, "Required Login fields")
+    failures = []
+    for identifier in (test_user, "missing@example.test"):
+        status, body, _ = post("/Account/Login", {"UsuarioOCorreo": identifier, "Password": "Wrong-Password9!"})
+        check(status == 200 and not authenticated(), "Invalid credentials do not sign in")
+        failures.append(re.search(r'<div[^>]*auth-validation[^>]*>(.*?)</div>', body, re.S).group(1))
+    check(failures[0] == failures[1], "Same credential error for known and unknown user")
+    status, _, headers = post("/Account/Login", {**login, "UsuarioOCorreo": test_user.upper(), "ReturnUrl": "/Libros"})
+    check(status == 302 and headers["Location"] == "/Libros" and authenticated(), "Username Login accepts local return URL")
+    check(identity_cookie().discard, "Login without remember uses session cookie")
+    post("/Account/Logout", {}, "/Home/Usuarios")
+    status, _, headers = post("/Account/Login", {**login, "UsuarioOCorreo": test_email.upper(), "Recordarme": "true", "ReturnUrl": "//example.test"})
+    check(status == 302 and headers["Location"] == "/" and authenticated(), "Email Login rejects protocol-relative redirect")
+    cookie = identity_cookie()
+    check(not cookie.discard and cookie.expires > time.time(), "Remember creates persistent cookie")
+    stop()
+    start()
+    check(authenticated(), "Session survives application restart")
+    post("/Account/Logout", {}, "/Home/Usuarios")
+    cookies.clear()
+    check(post("/Account/Login", login)[0] == 302 and authenticated(), "Stored account signs in after restart without previous cookies")
+    post("/Account/Logout", {}, "/Home/Usuarios")
+    for _ in range(5):
+        check(post("/Account/Login", {**login, "Password": "Wrong-Password9!"})[0] == 200, "Count failed login")
+    status, body, _ = post("/Account/Login", login)
+    check(status == 200 and "espera 5 minutos" in body and not authenticated(), "Locked account rejects correct password")
 
 def check(condition, label):
     global checks
@@ -78,6 +176,7 @@ def start(connection=CONNECTION):
 
 try:
     start()
+    authentication_checks()
     check(request("/Home/Categorias")[0] == 302, "Legacy category route redirects")
     marker = "Prueba " + str(time.time_ns())
     cases = [
@@ -142,6 +241,11 @@ try:
             check("invalid-secret-marker" not in body and "SqlException" not in body, "No EF diagnostics " + controller)
         check(request("/")[0] == 200, "Home still available without SQL")
         check(post("/Categorias/Create", {"Nombre": marker})[0] == 503, "Failed write does not redirect to success")
+        for action, values in (("Login", {"UsuarioOCorreo": test_user, "Password": "Prueba-Identity9!"}),
+                               ("Register", {"Usuario": test_user, "Email": test_email, "Password": "Prueba-Identity9!", "ConfirmarPassword": "Prueba-Identity9!"})):
+            status, body, _ = post("/Account/" + action, values)
+            check(status == 503 and "No se pudo completar" in body, "Controlled Identity database failure " + action)
+            check("invalid-secret-marker" not in body and "SqlException" not in body, "No Identity diagnostics " + action)
         stop()
     print(f"PASS: {checks} HTTP checks, including SQL persistence across restart.")
 except Exception:
@@ -151,3 +255,4 @@ except Exception:
 finally:
     stop()
     log.close()
+    identity_sql(cleanup=True)

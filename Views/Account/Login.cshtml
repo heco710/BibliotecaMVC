@@ -1,0 +1,36 @@
+@model LoginViewModel
+@{ ViewData["Title"] = "Iniciar sesión"; }
+
+<section class="container-xl auth-page" aria-labelledby="login-title">
+    <header class="auth-intro">
+        <span class="eyebrow">Tu cuenta en Biblioteca Virtual</span>
+        <h1 id="login-title">Bienvenido <br />de nuevo.</h1>
+        <p>Inicia sesión con tu usuario o correo electrónico.</p>
+        <a class="text-link" asp-controller="Libros" asp-action="Index">Explorar el catálogo <span aria-hidden="true">→</span></a>
+    </header>
+    <div class="auth-card">
+        <h2>Iniciar sesión</h2>
+        <p class="auth-description">Ingresa tus credenciales para continuar.</p>
+        <form asp-action="Login" method="post">
+            <input asp-for="ReturnUrl" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger auth-validation" role="alert"></div>
+            <div class="mb-4">
+                <label asp-for="UsuarioOCorreo" class="form-label"></label>
+                <input asp-for="UsuarioOCorreo" class="form-control" autocomplete="username" autocapitalize="none" spellcheck="false" aria-describedby="login-usuario-error" autofocus />
+                <span asp-validation-for="UsuarioOCorreo" id="login-usuario-error" class="text-danger"></span>
+            </div>
+            <div class="mb-4">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" autocomplete="current-password" aria-describedby="login-password-error" />
+                <span asp-validation-for="Password" id="login-password-error" class="text-danger"></span>
+            </div>
+            <div class="form-check mb-4">
+                <input asp-for="Recordarme" class="form-check-input" />
+                <label asp-for="Recordarme" class="form-check-label"></label>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Iniciar sesión</button>
+        </form>
+        <p class="auth-switch">¿Todavía no tienes cuenta? <a asp-action="Register" asp-route-returnUrl="@Model.ReturnUrl">Crear una cuenta</a></p>
+    </div>
+</section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

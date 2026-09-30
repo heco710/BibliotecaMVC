@@ -2,6 +2,20 @@
 <section class="container-xl editorial-page">
     <span class="eyebrow">Servicios de la biblioteca</span>
     <h1>Usuarios</h1>
-    <p class="editorial-lead">Este módulo todavía no está disponible.</p>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <p class="editorial-lead">Has iniciado sesión como <strong>@User.Identity.Name</strong>.</p>
+        <form asp-controller="Account" asp-action="Logout" method="post" class="mb-4">
+            <button type="submit" class="btn btn-outline-secondary">Cerrar sesión</button>
+        </form>
+    }
+    else
+    {
+        <p class="editorial-lead">Crea una cuenta o inicia sesión con tu usuario o correo electrónico.</p>
+        <div class="action-group mb-4">
+            <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Iniciar sesión</a>
+            <a class="btn btn-outline-secondary" asp-controller="Account" asp-action="Register">Crear cuenta</a>
+        </div>
+    }
     <a class="text-link" asp-controller="Libros" asp-action="Index">Consultar el catálogo <span aria-hidden="true">→</span></a>
 </section>

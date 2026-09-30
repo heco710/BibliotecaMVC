@@ -11,7 +11,7 @@ public sealed class ErrorDeDatosFilter(ILogger<ErrorDeDatosFilter> logger) : IEx
     public void OnException(ExceptionContext context)
     {
         if (context.ActionDescriptor is not ControllerActionDescriptor action ||
-            action.ControllerName is not ("Categorias" or "Libros" or "Autores")) return;
+            action.ControllerName is not ("Categorias" or "Libros" or "Autores" or "Account")) return;
         if (context.Exception is not (SqlException or DbUpdateException or InvalidOperationException or ArgumentException)) return;
 
         // Log the error category, not connection strings or user-submitted values.
