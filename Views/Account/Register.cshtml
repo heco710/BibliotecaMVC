@@ -1,0 +1,44 @@
+@model RegistroViewModel
+@{ ViewData["Title"] = "Crear cuenta"; }
+
+<section class="container-xl auth-page" aria-labelledby="register-title">
+    <header class="auth-intro">
+        <span class="eyebrow">Tu cuenta en Biblioteca Virtual</span>
+        <h1 id="register-title">Un lugar para <br />tus lecturas.</h1>
+        <p>Crea tu cuenta con un nombre de usuario, un correo electrónico y una contraseña.</p>
+        <a class="text-link" asp-controller="Libros" asp-action="Index">Explorar el catálogo <span aria-hidden="true">→</span></a>
+    </header>
+    <div class="auth-card">
+        <h2>Crear cuenta</h2>
+        <p class="auth-description">Al registrarte, tu sesión se iniciará automáticamente.</p>
+        <form asp-action="Register" method="post">
+            <input asp-for="ReturnUrl" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger auth-validation" role="alert"></div>
+            <div class="mb-3">
+                <label asp-for="Usuario" class="form-label"></label>
+                <input asp-for="Usuario" class="form-control" autocomplete="username" autocapitalize="none" spellcheck="false" aria-describedby="usuario-help usuario-error" autofocus />
+                <div id="usuario-help" class="form-text">De 3 a 64 caracteres: letras sin acentos, números, puntos o guiones.</div>
+                <span asp-validation-for="Usuario" id="usuario-error" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" autocomplete="email" autocapitalize="none" spellcheck="false" aria-describedby="email-error" />
+                <span asp-validation-for="Email" id="email-error" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" autocomplete="new-password" aria-describedby="password-help password-error" />
+                <div id="password-help" class="form-text">De 8 a 100 caracteres, con mayúscula, minúscula, número y símbolo.</div>
+                <span asp-validation-for="Password" id="password-error" class="text-danger"></span>
+            </div>
+            <div class="mb-4">
+                <label asp-for="ConfirmarPassword" class="form-label"></label>
+                <input asp-for="ConfirmarPassword" class="form-control" autocomplete="new-password" aria-describedby="confirmar-error" />
+                <span asp-validation-for="ConfirmarPassword" id="confirmar-error" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Crear cuenta</button>
+        </form>
+        <p class="auth-switch">¿Ya tienes cuenta? <a asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl">Iniciar sesión</a></p>
+    </div>
+</section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
