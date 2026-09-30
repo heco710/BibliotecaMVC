@@ -14,9 +14,8 @@ public sealed class ErrorDeDatosFilter(ILogger<ErrorDeDatosFilter> logger) : IEx
             action.ControllerName is not ("Categorias" or "Libros" or "Autores" or "Account")) return;
         if (context.Exception is not (SqlException or DbUpdateException or InvalidOperationException or ArgumentException)) return;
 
-        // Log the error category, not connection strings or user-submitted values.
-        logger.LogError("Error de datos en {Modulo}: {Tipo}; código SQL: {Codigo}",
-            action.ControllerName, context.Exception.GetType().Name, (context.Exception as SqlException)?.Number);
+        logger.LogError(context.Exception, "Error de datos en {Modulo}; código SQL: {Codigo}",
+            action.ControllerName, (context.Exception as SqlException)?.Number);
         context.Result = new ViewResult { ViewName = "ErrorDeDatos", StatusCode = StatusCodes.Status503ServiceUnavailable };
         context.ExceptionHandled = true;
     }

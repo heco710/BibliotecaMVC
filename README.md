@@ -29,7 +29,8 @@ Con la base preparada, basta con ejecutar `dotnet run --launch-profile http`. En
 
 ## Funcionalidad
 
-- Consulta, creación, edición y eliminación de libros, autores y categorías.
+- Consulta pública de libros, autores y categorías; creación, edición y eliminación solo con sesión iniciada.
+- El ISBN de cada libro es único.
 - Registro, Login por usuario o correo y cierre de sesión por POST con ASP.NET Core Identity.
 - Validación de campos, fechas e identificadores y protección antiforgery en formularios.
 - Diseño adaptable, portadas editoriales y fotografías de autores almacenadas localmente.
@@ -49,7 +50,7 @@ Autor y Categoria del libro son campos de texto. Préstamos está pendiente de i
 
 `BibliotecaContext` hereda de `IdentityUserContext<IdentityUser>`; `UserManager` registra cuentas y `SignInManager` verifica contraseñas y gestiona la sesión. Identity almacena hashes de contraseña. Los formularios incluyen antiforgery y solo aceptan destinos locales para el retorno del Login. La interfaz reutiliza los colores, tipografía, campos y botones del catálogo.
 
-La actividad incorpora únicamente autenticación: no añade roles, permisos ni restricciones de acceso al CRUD.
+Listados y detalles son públicos; crear, editar y eliminar requiere sesión (`[Authorize]`). No hay roles: cualquier usuario registrado puede modificar el catálogo.
 
 ## Pruebas
 
@@ -66,6 +67,6 @@ La prueba de C# aplica las migraciones antes de comprobar el CRUD. Sin `BIBLIOTE
 
 Si Windows impide ejecutar el script de preparación, usa `powershell.exe -NoProfile -ExecutionPolicy Bypass -File Database/Setup-Database.ps1` con los mismos argumentos; esta opción se limita al proceso que ejecuta el script.
 
-Verificación realizada el 30 de septiembre de 2026: compilación sin advertencias ni errores, 37 comprobaciones de C# y 253 comprobaciones HTTP aprobadas en `BibliotecaMVC_Test_Identity_20260930`. La migración también se aplicó a `BibliotecaDB` y se compararon todas las filas del catálogo antes y después, sin cambios. Login y Registro se revisaron en navegador; a 390 px no presentan desbordamiento horizontal.
+Verificación realizada el 30 de septiembre de 2026: compilación sin advertencias ni errores, 37 comprobaciones de C# y 253 comprobaciones HTTP aprobadas en `BibliotecaMVC_Test_Identity_20260930`. La migración también se aplicó a `BibliotecaDB` y se compararon todas las filas del catálogo antes y después, sin cambios. Login y Registro se revisaron en navegador; a 390 px no presentan desbordamiento horizontal. Tras exigir sesión en el CRUD y añadir la migración `IndiceUnicoIsbn`: 38 comprobaciones de C# y 262 HTTP aprobadas en la misma base.
 
 Referencia: [modelo de Identity y EF Core, incluyendo el contexto sin roles](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/customize-identity-model?view=aspnetcore-10.0).

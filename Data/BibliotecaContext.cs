@@ -9,4 +9,10 @@ public class BibliotecaContext(DbContextOptions<BibliotecaContext> options) : Id
 {
     public DbSet<Autor> Autores { get; set; }
     public DbSet<Libro> Libros { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+        builder.Entity<Libro>().HasIndex(libro => libro.ISBN).IsUnique();
+    }
 }

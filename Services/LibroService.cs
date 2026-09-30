@@ -7,27 +7,27 @@ namespace BibliotecaMVC.Services;
 
 public sealed class LibroService(IRepositorioLibro repositorio) : ILibroService
 {
-    public IReadOnlyList<Libro> ObtenerTodos() => repositorio.ObtenerTodos();
-    public Libro? ObtenerPorId(int id) => repositorio.ObtenerPorId(id);
-    public bool Eliminar(int id) => repositorio.Eliminar(id);
+    public Task<IReadOnlyList<Libro>> ObtenerTodosAsync() => repositorio.ObtenerTodosAsync();
+    public Task<Libro?> ObtenerPorIdAsync(int id) => repositorio.ObtenerPorIdAsync(id);
+    public Task<bool> EliminarAsync(int id) => repositorio.EliminarAsync(id);
 
-    public ResultadoOperacion Agregar(Libro libro)
+    public async Task<ResultadoOperacion> AgregarAsync(Libro libro)
     {
-        var errores = Validar(libro);
-        if (errores.Count > 0) return new(true, errores);
         libro.ID = 0;
-        libro.ID = repositorio.Agregar(libro);
+        var errores = await ValidarAsync(libro);
+        if (errores.Count > 0) return new(true, errores);
+        libro.ID = await repositorio.AgregarAsync(libro);
         return new(true, []);
     }
 
-    public ResultadoOperacion Actualizar(Libro libro)
+    public async Task<ResultadoOperacion> ActualizarAsync(Libro libro)
     {
-        var errores = Validar(libro);
+        var errores = await ValidarAsync(libro);
         if (errores.Count > 0) return new(true, errores);
-        return new(repositorio.Actualizar(libro), []);
+        return new(await repositorio.ActualizarAsync(libro), []);
     }
 
-    private static List<ValidationResult> Validar(Libro libro)
+    private async Task<List<ValidationResult>> ValidarAsync(Libro libro)
     {
         var errores = ResultadoOperacion.Validar(libro);
         if (libro.AnioPublicacion > DateTime.Today.Year)
@@ -35,6 +35,8 @@ public sealed class LibroService(IRepositorioLibro repositorio) : ILibroService
         string[] imagenesPermitidas = ["cien-anos-soledad.png", "casa-espiritus.png", "ficciones.png", "senor-presidente.png"];
         if (!imagenesPermitidas.Contains(libro.Imagen))
             errores.Add(new("Seleccione una imagen válida del catálogo.", [nameof(Libro.Imagen)]));
+        if (errores.Count == 0 && await repositorio.ExisteIsbnAsync(libro.ISBN, libro.ID))
+            errores.Add(new("Ya existe un libro con este ISBN.", [nameof(Libro.ISBN)]));
         return errores;
     }
 }

@@ -40,7 +40,7 @@ try {
     $connection.Open()
     $command = $connection.CreateCommand()
     $command.CommandText = if ($env:BIBLIOTECA_IDENTITY_CLEANUP -eq '1') {
-        'DELETE FROM dbo.AspNetUsers WHERE UserName = @user'
+        "DELETE FROM dbo.AspNetUsers WHERE UserName IN (@user, @user + '_crud')"
     } else {
         'SELECT COUNT(*) FROM dbo.AspNetUsers WHERE UserName = @user AND PasswordHash IS NOT NULL AND LEN(PasswordHash) > 50'
     }
@@ -178,6 +178,14 @@ try:
     start()
     authentication_checks()
     check(request("/Home/Categorias")[0] == 302, "Legacy category route redirects")
+    for controller in ("Libros", "Autores", "Categorias"):
+        check(request("/" + controller)[0] == 200, "Anonymous can read " + controller)
+        status, _, headers = request("/" + controller + "/Create")
+        check(status == 302 and "/Account/Login" in headers["Location"], "Anonymous cannot write " + controller)
+    crud_user = test_user + "_crud"
+    status, _, _ = post("/Account/Register", {"Usuario": crud_user, "Email": crud_user + "@example.test",
+                                             "Password": "Prueba-Identity9!", "ConfirmarPassword": "Prueba-Identity9!"})
+    check(status == 302, "Register CRUD account")
     marker = "Prueba " + str(time.time_ns())
     cases = [
         ("Libros", {"Titulo": marker, "Autor": "Autora", "Categoria": "Novela", "AnioPublicacion": "2020", "ISBN": "978-123", "Imagen": "ficciones.png", "Descripcion": "", "Disponible": "true"}, "Titulo"),

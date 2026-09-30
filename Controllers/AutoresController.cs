@@ -1,13 +1,17 @@
 using BibliotecaMVC.Models;
 using BibliotecaMVC.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BibliotecaMVC.Controllers;
 
+[Authorize]
 public class AutoresController(IAutorService servicio) : Controller
 {
+    [AllowAnonymous]
     public async Task<IActionResult> Index() => View(await servicio.ObtenerTodosAsync());
 
+    [AllowAnonymous]
     public async Task<IActionResult> Details(int id)
     {
         var autor = await servicio.ObtenerPorIdAsync(id);
