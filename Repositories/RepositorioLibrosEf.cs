@@ -6,35 +6,37 @@ namespace BibliotecaMVC.Repositories;
 
 public sealed class RepositorioLibrosEf(BibliotecaContext context) : IRepositorioLibro
 {
-    public IReadOnlyList<Libro> ObtenerTodos() =>
-        context.Libros.AsNoTracking().OrderBy(item => item.Titulo).ToList();
+    public async Task<IReadOnlyList<Libro>> ObtenerTodosAsync() =>
+        await context.Libros.AsNoTracking().OrderBy(item => item.Titulo).ToListAsync();
 
-    public Libro? ObtenerPorId(int id) => context.Libros.Find(id);
+    public async Task<Libro?> ObtenerPorIdAsync(int id) => await context.Libros.FindAsync(id);
 
-    public int Agregar(Libro libro)
+    public Task<bool> ExisteIsbnAsync(string isbn, int excluirId) =>
+        context.Libros.AnyAsync(item => item.ISBN == isbn && item.ID != excluirId);
+
+    public async Task<int> AgregarAsync(Libro libro)
     {
         context.Libros.Add(libro);
-        context.SaveChanges();
+        await context.SaveChangesAsync();
         return libro.ID;
     }
 
-    public bool Actualizar(Libro libro)
+    public async Task<bool> ActualizarAsync(Libro libro)
     {
-        var existente = context.Libros.Find(libro.ID);
+        var existente = await context.Libros.FindAsync(libro.ID);
         if (existente is null) return false;
         context.Entry(existente).CurrentValues.SetValues(libro);
-        context.Libros.Update(existente);
-        try { context.SaveChanges(); }
+        try { await context.SaveChangesAsync(); }
         catch (DbUpdateConcurrencyException) { return false; }
         return true;
     }
 
-    public bool Eliminar(int id)
+    public async Task<bool> EliminarAsync(int id)
     {
-        var libro = context.Libros.Find(id);
+        var libro = await context.Libros.FindAsync(id);
         if (libro is null) return false;
         context.Libros.Remove(libro);
-        try { context.SaveChanges(); }
+        try { await context.SaveChangesAsync(); }
         catch (DbUpdateConcurrencyException) { return false; }
         return true;
     }
