@@ -11,7 +11,7 @@ public sealed class ErrorDeDatosFilter(ILogger<ErrorDeDatosFilter> logger) : IEx
     public void OnException(ExceptionContext context)
     {
         if (context.ActionDescriptor is not ControllerActionDescriptor action ||
-            action.ControllerName is not ("Categorias" or "Libros" or "Autores" or "Account")) return;
+            action.ControllerName is not ("Categorias" or "Libros" or "Autores" or "Account" or "Usuarios")) return;
         if (context.Exception is not (SqlException or DbUpdateException or InvalidOperationException or ArgumentException)) return;
 
         logger.LogError(context.Exception, "Error de datos en {Modulo}; código SQL: {Codigo}",

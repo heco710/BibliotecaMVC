@@ -11,6 +11,10 @@
     <div class="auth-card">
         <h2>Iniciar sesión</h2>
         <p class="auth-description">Ingresa tus credenciales para continuar.</p>
+        @if (!string.IsNullOrEmpty(Model.ReturnUrl))
+        {
+            <div class="alert alert-info" role="status">La página que intentaste abrir requiere iniciar sesión. El catálogo de libros está disponible para usuarios registrados.</div>
+        }
         <form asp-action="Login" method="post">
             <input asp-for="ReturnUrl" type="hidden" />
             <div asp-validation-summary="ModelOnly" class="alert alert-danger auth-validation" role="alert"></div>

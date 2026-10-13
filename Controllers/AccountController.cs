@@ -24,6 +24,11 @@ public sealed class AccountController(UserManager<IdentityUser> users, SignInMan
         {
             var result = await signIn.PasswordSignInAsync(user, model.Password, model.Recordarme, lockoutOnFailure: true);
             if (result.Succeeded) return Volver(model.ReturnUrl);
+            if (result.IsLockedOut)
+            {
+                ModelState.AddModelError(string.Empty, "Cuenta bloqueada temporalmente por demasiados intentos; espera 5 minutos y vuelve a intentarlo.");
+                return View(model);
+            }
         }
 
         ModelState.AddModelError(string.Empty, "Usuario, correo o contraseña incorrectos. Si agotaste los intentos, espera 5 minutos y vuelve a intentarlo.");
@@ -43,6 +48,9 @@ public sealed class AccountController(UserManager<IdentityUser> users, SignInMan
         var result = await users.CreateAsync(user, model.Password);
         if (result.Succeeded)
         {
+            // Toda cuenta nueva empieza como Lector; un Administrador puede cambiar su rol en /Usuarios.
+            var rol = await users.AddToRoleAsync(user, Roles.Lector);
+            if (!rol.Succeeded) throw new InvalidOperationException("No se pudo asignar el rol Lector a la cuenta nueva.");
             await signIn.SignInAsync(user, isPersistent: false);
             return Volver(model.ReturnUrl);
         }
@@ -58,6 +66,14 @@ public sealed class AccountController(UserManager<IdentityUser> users, SignInMan
     {
         await signIn.SignOutAsync();
         return RedirectToAction("Index", "Home");
+    }
+
+    // Destino de AccessDeniedPath: el usuario inició sesión, pero su rol no permite la operación.
+    [HttpGet]
+    public IActionResult AccesoDenegado()
+    {
+        Response.StatusCode = StatusCodes.Status403Forbidden;
+        return View();
     }
 
     private IActionResult Volver(string? returnUrl) => Url.IsLocalUrl(returnUrl)

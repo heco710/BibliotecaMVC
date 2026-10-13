@@ -1,6 +1,6 @@
 # BibliotecaMVC
 
-Aplicación ASP.NET Core MVC para administrar libros, autores y categorías, con registro e inicio de sesión mediante ASP.NET Core Identity. Libros, autores y usuarios utilizan Entity Framework Core; categorías utiliza ADO.NET. Los datos se guardan en SQL Server.
+Aplicación ASP.NET Core MVC para administrar libros, autores y categorías, con registro, inicio de sesión y roles mediante ASP.NET Core Identity. Libros, autores y usuarios utilizan Entity Framework Core; categorías utiliza ADO.NET. Los datos se guardan en SQL Server.
 
 ## Requisitos
 
@@ -25,11 +25,14 @@ La aplicación está disponible en [localhost:5092](http://localhost:5092).
 
 La configuración predeterminada utiliza `.\SQLEXPRESS`, la base `BibliotecaDB` y autenticación de Windows. El script prepara Categorias y guarda la conexión en User Secrets. Las migraciones incluidas crean Autores, Libros y las tablas de Identity, y cargan los datos iniciales del catálogo una sola vez. Los cambios del catálogo y las cuentas se conservan al reiniciar.
 
-Con la base preparada, basta con ejecutar `dotnet run --launch-profile http`. En la consola del Administrador de paquetes de Visual Studio, `Update-Database` aplica las migraciones pendientes.
+Con la base preparada, basta con ejecutar `dotnet run --launch-profile http`: al iniciar, la aplicación aplica las migraciones pendientes, crea los roles y las cuentas de prueba. Si SQL Server no está disponible, arranca igual y los módulos con datos muestran la página de error controlada. En la consola del Administrador de paquetes de Visual Studio, `Update-Database` aplica las migraciones pendientes.
 
 ## Funcionalidad
 
-- Consulta pública de libros, autores y categorías; creación, edición y eliminación solo con sesión iniciada.
+- Libros: consulta para cualquier usuario con rol; agregar y editar para Bibliotecario y Administrador; eliminar solo para Administrador.
+- Autores y categorías: consulta pública; creación, edición y eliminación con sesión iniciada.
+- Portadas: una de las cuatro del catálogo o una imagen propia (JPG, PNG o WEBP, máximo 2 MB) guardada en `wwwroot/images/libros`.
+- Confirmación con SweetAlert2 antes de guardar cambios en los formularios de edición.
 - El ISBN de cada libro es único.
 - Registro, Login por usuario o correo y cierre de sesión por POST con ASP.NET Core Identity.
 - Validación de campos, fechas e identificadores y protección antiforgery en formularios.
@@ -48,9 +51,31 @@ Autor y Categoria del libro son campos de texto. Préstamos está pendiente de i
 4. Pulsa **Cerrar sesión**. En `/Account/Login`, vuelve a ingresar con el nombre de usuario o el correo y la contraseña.
 5. **Recordar mi sesión** crea una cookie persistente con vigencia de 7 días, renovable por actividad. Sin esta opción, la cookie es de sesión. Tras 5 intentos fallidos, Identity bloquea la cuenta durante 5 minutos.
 
-`BibliotecaContext` hereda de `IdentityUserContext<IdentityUser>`; `UserManager` registra cuentas y `SignInManager` verifica contraseñas y gestiona la sesión. Identity almacena hashes de contraseña. Los formularios incluyen antiforgery y solo aceptan destinos locales para el retorno del Login. La interfaz reutiliza los colores, tipografía, campos y botones del catálogo.
+`UserManager` registra cuentas y `SignInManager` verifica contraseñas y gestiona la sesión. Identity almacena hashes de contraseña. Los formularios incluyen antiforgery y solo aceptan destinos locales para el retorno del Login. La interfaz reutiliza los colores, tipografía, campos y botones del catálogo.
 
-Listados y detalles son públicos; crear, editar y eliminar requiere sesión (`[Authorize]`). No hay roles: cualquier usuario registrado puede modificar el catálogo.
+## Autorización y roles
+
+Autenticación identifica al usuario; autorización decide qué puede hacer. Haber iniciado sesión no da acceso a todas las operaciones.
+
+| Rol | Libros | Otros permisos |
+|---|---|---|
+| Lector | Consultar listado y detalle | — |
+| Bibliotecario | Consultar, agregar y editar | — |
+| Administrador | Consultar, agregar, editar y eliminar | Asignar roles en `/Usuarios` |
+
+- `BibliotecaContext` hereda de `IdentityDbContext<IdentityUser>` y la migración `AgregarRoles` añade las tablas de roles.
+- `LibrosController` usa `[Authorize(Roles = ...)]` por acción; las constantes están en `Models/Roles.cs`.
+- Las vistas ocultan los botones que el rol no puede usar. Si se accede directamente a una URL restringida, se muestra `/Account/AccesoDenegado` (HTTP 403) con el rol actual y los permisos necesarios.
+- Las cuentas nuevas reciben el rol Lector. Al iniciar, los usuarios existentes sin rol reciben Lector.
+- Un Administrador cambia roles en `/Usuarios` (enlace en la página Usuarios). No puede cambiar su propio rol. El cambio se aplica cuando el usuario vuelve a iniciar sesión, o como máximo en 30 minutos.
+
+Cuentas de prueba (solo en Development, definidas en `appsettings.Development.json`):
+
+| Usuario | Contraseña | Rol |
+|---|---|---|
+| `admin` | `Admin#2026` | Administrador |
+| `bibliotecario` | `Biblio#2026` | Bibliotecario |
+| `lector` | `Lector#2026` | Lector |
 
 ## Pruebas
 
@@ -69,4 +94,6 @@ Si Windows impide ejecutar el script de preparación, usa `powershell.exe -NoPro
 
 Verificación realizada el 30 de septiembre de 2026: compilación sin advertencias ni errores, 37 comprobaciones de C# y 253 comprobaciones HTTP aprobadas en `BibliotecaMVC_Test_Identity_20260930`. La migración también se aplicó a `BibliotecaDB` y se compararon todas las filas del catálogo antes y después, sin cambios. Login y Registro se revisaron en navegador; a 390 px no presentan desbordamiento horizontal. Tras exigir sesión en el CRUD y añadir la migración `IndiceUnicoIsbn`: 38 comprobaciones de C# y 262 HTTP aprobadas en la misma base.
 
-Referencia: [modelo de Identity y EF Core, incluyendo el contexto sin roles](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/customize-identity-model?view=aspnetcore-10.0).
+Verificación del 13 de octubre de 2026 (roles): 42 comprobaciones de C# y 311 HTTP aprobadas en `BibliotecaMVC_Test_Roles_20261013`, incluyendo acceso por rol, acceso directo denegado, asignación de roles y subida de portadas. Revisión en navegador con las cuentas Lector y Administrador.
+
+Referencia: [modelo de Identity y EF Core](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/customize-identity-model?view=aspnetcore-10.0).

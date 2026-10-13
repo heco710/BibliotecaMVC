@@ -1,0 +1,61 @@
+@using Microsoft.AspNetCore.Identity
+@model List<(IdentityUser Usuario, string Rol)>
+@{ ViewData["Title"] = "Roles de usuarios"; }
+
+<section class="module-page">
+    <div class="container-xl">
+        <header class="module-header">
+            <div>
+                <h1 id="users-title">Roles de usuarios</h1>
+                <p>@Model.Count usuarios registrados. Lector consulta libros; Bibliotecario además agrega y edita; Administrador además elimina y asigna roles.</p>
+            </div>
+        </header>
+        @if (TempData["Mensaje"] is string mensaje)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @mensaje
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+        }
+        @if (TempData["Error"] is string error)
+        {
+            <div class="alert alert-warning" role="alert">@error</div>
+        }
+        <div class="table-responsive">
+            <table class="table align-middle" aria-labelledby="users-title">
+                <thead>
+                    <tr><th scope="col">Usuario</th><th scope="col">Correo electrónico</th><th scope="col">Rol actual</th><th scope="col">Cambiar rol</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var (usuario, rol) in Model)
+                    {
+                        <tr>
+                            <td>@usuario.UserName</td>
+                            <td>@usuario.Email</td>
+                            <td><span class="category-pill">@rol</span></td>
+                            <td>
+                                @if (usuario.UserName == User.Identity?.Name)
+                                {
+                                    <span>Tu cuenta</span>
+                                }
+                                else
+                                {
+                                    <form asp-action="AsignarRol" asp-route-id="@usuario.Id" method="post" class="d-flex gap-2">
+                                        <label class="visually-hidden" for="rol-@usuario.Id">Nuevo rol para @usuario.UserName</label>
+                                        <select id="rol-@usuario.Id" name="rol" class="form-select form-select-sm">
+                                            @foreach (var opcion in Roles.Lista)
+                                            {
+                                                <option value="@opcion" selected="@(opcion == rol)">@opcion</option>
+                                            }
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-primary">Asignar</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

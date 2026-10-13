@@ -4,7 +4,12 @@
     <h1>Usuarios</h1>
     @if (User.Identity?.IsAuthenticated == true)
     {
-        <p class="editorial-lead">Has iniciado sesión como <strong>@User.Identity.Name</strong>.</p>
+        var rol = Roles.Lista.FirstOrDefault(User.IsInRole) ?? "Sin rol";
+        <p class="editorial-lead">Has iniciado sesión como <strong>@User.Identity.Name</strong> con el rol <strong>@rol</strong>. @Roles.Descripcion(rol)</p>
+        @if (User.IsInRole(Roles.Administrador))
+        {
+            <p><a class="text-link" asp-controller="Usuarios" asp-action="Index">Administrar roles de usuarios <span aria-hidden="true">→</span></a></p>
+        }
         <form asp-controller="Account" asp-action="Logout" method="post" class="mb-4">
             <button type="submit" class="btn btn-outline-secondary">Cerrar sesión</button>
         </form>
