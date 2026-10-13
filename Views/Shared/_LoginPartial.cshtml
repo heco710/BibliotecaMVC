@@ -1,6 +1,7 @@
 @if (User.Identity?.IsAuthenticated == true)
 {
-    <li class="nav-item auth-nav"><span class="session-user" title="@User.Identity.Name">@User.Identity.Name</span></li>
+    var rol = Roles.Lista.FirstOrDefault(User.IsInRole) ?? "Sin rol";
+    <li class="nav-item auth-nav"><span class="session-user" title="@User.Identity.Name · Rol: @rol">@User.Identity.Name<span class="visually-hidden">, rol @rol</span></span></li>
     <li class="nav-item">
         <form asp-controller="Account" asp-action="Logout" method="post">
             <button type="submit" class="nav-link session-logout">Cerrar sesión</button>

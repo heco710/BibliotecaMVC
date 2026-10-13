@@ -1,5 +1,7 @@
 """Run after dotnet build; use only a dedicated BibliotecaMVC_Test_ database."""
 import html
+import json
+import uuid
 import http.cookiejar
 import os
 from pathlib import Path
@@ -125,6 +127,70 @@ def authentication_checks():
     status, body, _ = post("/Account/Login", login)
     check(status == 200 and "espera 5 minutos" in body and not authenticated(), "Locked account rejects correct password")
 
+SEED = {item["Rol"]: item for item in json.loads((ROOT / "appsettings.Development.json").read_text(encoding="utf-8-sig"))["UsuariosIniciales"]}
+
+def login(user, password):
+    status, _, _ = post("/Account/Login", {"UsuarioOCorreo": user, "Password": password})
+    check(status == 302, "Login " + user)
+
+def login_role(role):
+    login(SEED[role]["Usuario"], SEED[role]["Password"])
+
+def denied(path, data=None):
+    status, _, headers = request(path, data)
+    return status == 302 and "/Account/AccesoDenegado" in headers["Location"]
+
+def multipart(path, fields, file_field, filename, content, content_type, form):
+    fields = {**fields, "__RequestVerificationToken": token(form)}
+    boundary = uuid.uuid4().hex
+    crlf = "\r\n"
+    parts = [f'--{boundary}{crlf}Content-Disposition: form-data; name="{k}"{crlf}{crlf}{v}{crlf}'.encode() for k, v in fields.items()]
+    parts.append(f'--{boundary}{crlf}Content-Disposition: form-data; name="{file_field}"; filename="{filename}"{crlf}'
+                 f'Content-Type: {content_type}{crlf}{crlf}'.encode() + content + crlf.encode())
+    req = urllib.request.Request(BASE + path, b"".join(parts) + f"--{boundary}--{crlf}".encode(),
+                                 {"Content-Type": "multipart/form-data; boundary=" + boundary})
+    try:
+        response = client.open(req, timeout=15)
+    except urllib.error.HTTPError as error:
+        response = error
+    with response:
+        return response.status, response.read().decode(errors="replace"), response.headers
+
+def authorization_checks(user):
+    # Lector: consulta, pero no ve ni puede ejecutar acciones de escritura.
+    login(user, "Prueba-Identity9!")
+    status, body, _ = request("/Libros")
+    check(status == 200 and "Agregar libro" not in body and "/Libros/Edit/" not in body, "Lector sees catalog without write actions")
+    check("Tu rol de Lector" in body, "Lector sees clear role message")
+    first = re.search(r'href="/Libros/Details/(\d+)"', body).group(1)
+    status, body, _ = request("/Libros/Details/" + first)
+    check(status == 200 and "Editar libro" not in body and "/Libros/Delete/" not in body, "Lector details without actions")
+    for path in ("/Libros/Create", "/Libros/Edit/" + first, "/Libros/Delete/" + first, "/Usuarios"):
+        check(denied(path), "Lector denied " + path)
+    check(denied("/Libros/Delete/" + first, {"__RequestVerificationToken": token("/Libros")}), "Lector cannot POST delete")
+    check(request("/Libros/Details/" + first)[0] == 200, "Denied delete kept the book")
+    status, body, _ = request("/Account/AccesoDenegado")
+    check(status == 403 and "No tienes permiso" in html.unescape(body) and "Lector" in body, "Clear access denied page")
+    # Bibliotecario: agrega y edita, no elimina.
+    login_role("Bibliotecario")
+    status, body, _ = request("/Libros")
+    check(status == 200 and "Agregar libro" in body and "/Libros/Edit/" in body and "/Libros/Delete/" not in body, "Bibliotecario actions")
+    check(request("/Libros/Create")[0] == 200 and request("/Libros/Edit/" + first)[0] == 200, "Bibliotecario can open create/edit")
+    check(denied("/Libros/Delete/" + first) and denied("/Usuarios"), "Bibliotecario cannot delete or manage roles")
+    # Administrador: todo, incluida la asignación de roles.
+    login_role("Administrador")
+    status, body, _ = request("/Libros")
+    check("/Libros/Delete/" in body and request("/Libros/Delete/" + first)[0] == 200, "Administrador can delete")
+    status, body, _ = request("/Usuarios")
+    rows = re.findall(r'<tr>.*?</tr>', body, re.S)
+    row = next(r for r in rows if user + "<" in r)
+    user_id = re.search(r'action="/Usuarios/AsignarRol/([^"]+)"', row).group(1)
+    check(status == 200 and "Lector" in row, "Administrador sees user roles")
+    check(post("/Usuarios/AsignarRol/" + user_id, {"rol": "NoExiste"}, "/Usuarios")[0] == 400, "Reject unknown role")
+    check(post("/Usuarios/AsignarRol/" + user_id, {"rol": "Bibliotecario"}, "/Usuarios")[0] == 302, "Assign role")
+    login(user, "Prueba-Identity9!")
+    check(request("/Libros/Create")[0] == 200, "New role applies after login")
+
 def check(condition, label):
     global checks
     if not condition:
@@ -138,7 +204,7 @@ def request(path, data=None):
     except urllib.error.HTTPError as error:
         response = error
     with response:
-        return response.status, response.read().decode(), response.headers
+        return response.status, response.read().decode(errors="replace"), response.headers
 
 def token(path):
     status, body, _ = request(path)
@@ -178,14 +244,19 @@ try:
     start()
     authentication_checks()
     check(request("/Home/Categorias")[0] == 302, "Legacy category route redirects")
+    status, _, headers = request("/Libros")
+    check(status == 302 and "/Account/Login" in headers["Location"], "Anonymous must sign in to read Libros")
     for controller in ("Libros", "Autores", "Categorias"):
-        check(request("/" + controller)[0] == 200, "Anonymous can read " + controller)
+        if controller != "Libros":
+            check(request("/" + controller)[0] == 200, "Anonymous can read " + controller)
         status, _, headers = request("/" + controller + "/Create")
         check(status == 302 and "/Account/Login" in headers["Location"], "Anonymous cannot write " + controller)
     crud_user = test_user + "_crud"
     status, _, _ = post("/Account/Register", {"Usuario": crud_user, "Email": crud_user + "@example.test",
                                              "Password": "Prueba-Identity9!", "ConfirmarPassword": "Prueba-Identity9!"})
     check(status == 302, "Register CRUD account")
+    authorization_checks(crud_user)
+    login_role("Administrador")
     marker = "Prueba " + str(time.time_ns())
     cases = [
         ("Libros", {"Titulo": marker, "Autor": "Autora", "Categoria": "Novela", "AnioPublicacion": "2020", "ISBN": "978-123", "Imagen": "ficciones.png", "Descripcion": "", "Disponible": "true"}, "Titulo"),
@@ -226,6 +297,15 @@ try:
         values = {**values, "ID": row_id, title_key: marker + " editado"}
         check(post(base + "/Edit/" + row_id, values)[0] == 302, "Edit " + controller)
         check("editado" in html.unescape(request(base + "/Details/" + row_id)[1]), "Edit persisted " + controller)
+        if controller == "Libros":
+            png = bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) + b"\0" * 64
+            status, body, _ = multipart(base + "/Edit/" + row_id, values, "imagenArchivo", "x.png", b"no soy imagen", "image/png", base + "/Edit/" + row_id)
+            check(status == 200 and "Formato no permitido" in body, "Reject fake upload")
+            status, _, _ = multipart(base + "/Edit/" + row_id, values, "imagenArchivo", "portada.png", png, "image/png", base + "/Edit/" + row_id)
+            uploaded = re.search(r'src="(/images/libros/[^"?]+)', request(base + "/Details/" + row_id)[1])
+            check(status == 302 and uploaded is not None and request(uploaded.group(1))[0] == 200, "Upload cover served")
+            values = {**values, "Imagen": uploaded.group(1).removeprefix("/images/")}
+            check(post(base + "/Edit/" + row_id, values)[0] == 302, "Keep uploaded cover on edit")
         check(request(base + "/Delete/" + row_id)[0] == 200, "Delete confirmation " + controller)
         check(request(base + "/Details/" + row_id)[0] == 200, "GET Delete must not delete " + controller)
         stop()
@@ -236,6 +316,8 @@ try:
         check(request(base + "/Delete/" + row_id, {"id": row_id, "__RequestVerificationToken": delete_token})[0] == 404, "Repeated delete " + controller)
         for action in ("Details", "Edit", "Delete"):
             check(request(base + "/" + action + "/" + row_id)[0] == 404, "Missing row " + controller + action)
+        if controller == "Libros":
+            check(request(uploaded.group(1))[0] == 404, "Deleting book removes uploaded cover")
         check(post(base + "/Edit/" + row_id, values, base + "/Create")[0] == 404, "Stale edit " + controller)
     stop()
     for invalid_connection in ("", "invalid-secret-marker", "Server=127.0.0.1,1;Database=missing;Integrated Security=True;Connect Timeout=1;Encrypt=True;TrustServerCertificate=True"):

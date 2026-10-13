@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using BibliotecaMVC.Models;
 using BibliotecaMVC.Repositories;
 using BibliotecaMVC.Services;
+using BibliotecaMVC.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
@@ -16,7 +18,7 @@ void Check(bool condition, string message)
 // Las entradas inválidas deben rechazarse antes de intentar conectar a SQL Server.
 using var validationContext = new BibliotecaContext(new DbContextOptionsBuilder<BibliotecaContext>()
     .UseSqlServer("Server=127.0.0.1,1;Database=validation;Integrated Security=True;Connect Timeout=1").Options);
-var libroService = new LibroService(new RepositorioLibrosEf(validationContext));
+var libroService = new LibroService(new RepositorioLibrosEf(validationContext), new SinImagenes());
 var invalidBook = new Libro { Titulo = "Prueba", Autor = "Autora", Categoria = "Novela", ISBN = "978-123",
     AnioPublicacion = DateTime.Today.Year + 1, Imagen = "ficciones.png" };
 Check(!(await libroService.AgregarAsync(invalidBook)).Exitoso, "Rechazar publicación futura antes de SQL");
@@ -26,6 +28,16 @@ Check(!(await libroService.AgregarAsync(invalidBook)).Exitoso, "Rechazar imagen 
 invalidBook.Imagen = "ficciones.png";
 invalidBook.Titulo = "";
 Check(!(await libroService.AgregarAsync(invalidBook)).Exitoso, "Validar DataAnnotations sin MVC");
+
+// Portadas subidas: se validan extensión, tipo y firma real del archivo.
+var imagenService = new ImagenService(null!);
+FormFile Archivo(byte[] datos, string nombre, string tipo) =>
+    new(new MemoryStream(datos), 0, datos.Length, "imagenArchivo", nombre) { Headers = new HeaderDictionary(), ContentType = tipo };
+byte[] png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0];
+Check(imagenService.Validar(Archivo(png, "portada.png", "image/png")) is null, "Aceptar PNG válido");
+Check(imagenService.Validar(Archivo("hola mundo, no soy imagen"u8.ToArray(), "falsa.png", "image/png")) is not null, "Rechazar archivo con firma falsa");
+Check(imagenService.Validar(Archivo(png, "portada.gif", "image/gif")) is not null, "Rechazar extensión no permitida");
+Check(imagenService.Validar(Archivo(new byte[2 * 1024 * 1024 + 1], "grande.png", "image/png")) is not null, "Rechazar imagen mayor a 2 MB");
 var autorService = new AutorService(new RepositorioAutoresEf(validationContext));
 Check(!(await autorService.AgregarAsync(new Autor { Nombre = "Ana", Apellido = "Pérez", Nacionalidad = "Guatemalteca",
     FechaNacimiento = DateTime.Today.AddDays(1) })).Exitoso, "Rechazar nacimiento futuro antes de SQL");
@@ -68,13 +80,13 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     {
         await using (var create = new BibliotecaContext(options))
         {
-            Check((await new LibroService(new RepositorioLibrosEf(create)).AgregarAsync(book)).Exitoso && book.ID > 0 && book.ID != 999,
+            Check((await new LibroService(new RepositorioLibrosEf(create), new SinImagenes()).AgregarAsync(book)).Exitoso && book.ID > 0 && book.ID != 999,
                 "EF agrega libro con identidad de SQL, ignorando el ID recibido");
             Check((await new AutorService(new RepositorioAutoresEf(create)).AgregarAsync(author)).Exitoso && author.ID > 0 && author.ID != 999,
                 "EF agrega autor con identidad de SQL");
             var duplicado = new Libro { Titulo = "Otro", Autor = "Autora", Categoria = "Novela",
                 AnioPublicacion = 2020, ISBN = book.ISBN, Imagen = "ficciones.png" };
-            Check((await new LibroService(new RepositorioLibrosEf(create)).AgregarAsync(duplicado)).Errores
+            Check((await new LibroService(new RepositorioLibrosEf(create), new SinImagenes()).AgregarAsync(duplicado)).Errores
                 .Any(error => error.MemberNames.Contains(nameof(Libro.ISBN))), "Rechazar ISBN duplicado");
         }
         await using (var read = new BibliotecaContext(options))
@@ -90,7 +102,7 @@ if (!string.IsNullOrWhiteSpace(connectionString))
         author.Nombre = "Autora editada"; author.Activo = false;
         await using (var edit = new BibliotecaContext(options))
         {
-            Check((await new LibroService(new RepositorioLibrosEf(edit)).ActualizarAsync(book)).Exitoso, "EF UPDATE libro");
+            Check((await new LibroService(new RepositorioLibrosEf(edit), new SinImagenes()).ActualizarAsync(book)).Exitoso, "EF UPDATE libro");
             Check((await new AutorService(new RepositorioAutoresEf(edit)).ActualizarAsync(author)).Exitoso, "EF UPDATE autor");
         }
         await using (var read = new BibliotecaContext(options))
@@ -160,4 +172,11 @@ sealed class CategoriaFake : IRepositorioCategoria
     public Task<int> AgregarAsync(Categoria categoria) { Writes++; return Task.FromResult(7); }
     public Task<bool> ActualizarAsync(Categoria categoria) { Writes++; return Task.FromResult(false); }
     public Task<bool> EliminarAsync(int id) => Task.FromResult(false);
+}
+
+sealed class SinImagenes : IImagenService
+{
+    public string? Validar(IFormFile archivo) => null;
+    public Task<string> GuardarAsync(IFormFile archivo) => throw new NotSupportedException();
+    public void Eliminar(string? ruta) { }
 }
