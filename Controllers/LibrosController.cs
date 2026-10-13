@@ -5,33 +5,36 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BibliotecaMVC.Controllers;
 
-[Authorize]
+// Autenticación: quién es el usuario. Autorización: qué puede hacer según su rol.
+// Consultar: cualquier rol. Agregar y editar: Bibliotecario o Administrador. Eliminar: solo Administrador.
+[Authorize(Roles = Roles.Todos)]
 public class LibrosController(ILibroService servicio) : Controller
 {
-    [AllowAnonymous]
     public async Task<IActionResult> Index() => View(await servicio.ObtenerTodosAsync());
 
-    [AllowAnonymous]
     public async Task<IActionResult> Details(int id)
     {
         var libro = await servicio.ObtenerPorIdAsync(id);
         return libro is null ? NotFound() : View(libro);
     }
 
+    [Authorize(Roles = Roles.Gestores)]
     public IActionResult Create() => View(new Libro { AnioPublicacion = DateTime.Today.Year, Disponible = true });
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Libro libro)
+    [Authorize(Roles = Roles.Gestores)]
+    public async Task<IActionResult> Create(Libro libro, IFormFile? imagenArchivo)
     {
         if (!ModelState.IsValid) return View(libro);
-        var resultado = await servicio.AgregarAsync(libro);
+        var resultado = await servicio.AgregarAsync(libro, imagenArchivo);
         ModelState.AgregarErrores(resultado.Errores);
         if (!resultado.Exitoso) return View(libro);
         TempData["Mensaje"] = "El libro se agregó correctamente.";
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = Roles.Gestores)]
     public async Task<IActionResult> Edit(int id)
     {
         var libro = await servicio.ObtenerPorIdAsync(id);
@@ -40,11 +43,12 @@ public class LibrosController(ILibroService servicio) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit([FromRoute] int id, Libro libro)
+    [Authorize(Roles = Roles.Gestores)]
+    public async Task<IActionResult> Edit([FromRoute] int id, Libro libro, IFormFile? imagenArchivo)
     {
         if (id != libro.ID) return BadRequest();
         if (!ModelState.IsValid) return View(libro);
-        var resultado = await servicio.ActualizarAsync(libro);
+        var resultado = await servicio.ActualizarAsync(libro, imagenArchivo);
         if (!resultado.Encontrado) return NotFound();
         ModelState.AgregarErrores(resultado.Errores);
         if (!resultado.Exitoso) return View(libro);
@@ -52,6 +56,7 @@ public class LibrosController(ILibroService servicio) : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = Roles.Administrador)]
     public async Task<IActionResult> Delete(int id)
     {
         var libro = await servicio.ObtenerPorIdAsync(id);
@@ -60,6 +65,7 @@ public class LibrosController(ILibroService servicio) : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Administrador)]
     public async Task<IActionResult> DeleteConfirmed([FromRoute] int id)
     {
         if (!await servicio.EliminarAsync(id)) return NotFound();

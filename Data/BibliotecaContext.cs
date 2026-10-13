@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BibliotecaMVC.Data;
 
-public class BibliotecaContext(DbContextOptions<BibliotecaContext> options) : IdentityUserContext<IdentityUser>(options)
+// IdentityDbContext incluye las tablas de roles (AspNetRoles, AspNetUserRoles, AspNetRoleClaims).
+public class BibliotecaContext(DbContextOptions<BibliotecaContext> options) : IdentityDbContext<IdentityUser>(options)
 {
     public DbSet<Autor> Autores { get; set; }
     public DbSet<Libro> Libros { get; set; }
