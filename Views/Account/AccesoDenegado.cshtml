@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "Acceso denegado";
+    var rol = Roles.Lista.FirstOrDefault(User.IsInRole) ?? "Sin rol";
+}
+<section class="module-page">
+    <div class="container-xl">
+        <div class="entity-form-shell">
+            <div class="alert alert-warning" role="alert">
+                <h1 class="h3">No tienes permiso para realizar esta operación</h1>
+                <p>Iniciaste sesión como <strong>@User.Identity?.Name</strong> con el rol <strong>@rol</strong>: @Roles.Descripcion(rol)</p>
+                <p>Agregar y editar libros corresponde a los roles Bibliotecario y Administrador; eliminar libros, solo al Administrador. Si necesitas otro nivel de acceso, solicítalo a un administrador.</p>
+                <a class="btn btn-outline-secondary" asp-controller="Libros" asp-action="Index">Volver al catálogo</a>
+                <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Ir al inicio</a>
+            </div>
+        </div>
+    </div>
+</section>

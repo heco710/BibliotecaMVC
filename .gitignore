@@ -488,3 +488,6 @@ $RECYCLE.BIN/
 /docs/REVISION_EF_CORE.md
 /docs/MATERIAL_EF_CORE.json
 /docs/FUENTES_IMAGENES.json
+
+# Imágenes subidas desde el formulario de libros
+/wwwroot/images/libros/
