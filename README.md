@@ -66,7 +66,7 @@ Autenticación identifica al usuario; autorización decide qué puede hacer. Hab
 
 - `BibliotecaContext` hereda de `IdentityDbContext<IdentityUser>` y la migración `AgregarRoles` añade las tablas de roles.
 - `LibrosController`, `AutoresController` y `CategoriasController` usan `[Authorize(Roles = ...)]` por acción; las constantes están en `Models/Roles.cs`.
-- `RoleManager<IdentityRole>` crea los roles Admin, Bibliotecario y Usuario al iniciar si no existen. Los roles `Administrador` y `Lector` de versiones anteriores se renombran a `Admin` y `Usuario`, conservando las asignaciones.
+- `RoleManager<IdentityRole>` crea los roles Admin, Bibliotecario y Usuario al iniciar si no existen. Los roles `Administrador` y `Lector` de versiones anteriores se renombran a `Admin` y `Usuario`, conservando las asignaciones. Si los roles nuevos ya existían (por ejemplo, insertados por SQL), los usuarios se trasladan y los roles anteriores se eliminan.
 - Las vistas ocultan con `User.IsInRole(...)` los botones que el rol no puede usar, y el menú muestra **Roles** solo al Admin. Si se accede directamente a una URL restringida, se muestra `/Account/AccesoDenegado` (HTTP 403) con el rol actual y los permisos necesarios.
 - Las cuentas nuevas reciben el rol Usuario mediante `UserManager<IdentityUser>`. Al iniciar, los usuarios existentes sin rol reciben Usuario.
 - Un Admin cambia roles en `/Usuarios` (menú **Roles**). No puede cambiar su propio rol. El cambio se aplica cuando el usuario vuelve a iniciar sesión, o como máximo en 30 minutos.
@@ -98,6 +98,6 @@ Verificación realizada el 30 de septiembre de 2026: compilación sin advertenci
 
 Verificación del 13 de octubre de 2026 (roles): 42 comprobaciones de C# y 311 HTTP aprobadas en `BibliotecaMVC_Test_Roles_20261013`, incluyendo acceso por rol, acceso directo denegado, asignación de roles y subida de portadas. Revisión en navegador con las cuentas Lector y Administrador.
 
-Verificación del 22 de octubre de 2026 (semana 14): 42 comprobaciones de C# y 330 HTTP aprobadas en `BibliotecaMVC_Test_Roles_20261022`, incluyendo la matriz de permisos de Libros, Autores y Categorías por rol, acceso directo a URL restringidas, CRUD completo de Libros con la cuenta Bibliotecario y el renombrado de los roles anteriores sin duplicados.
+Verificación del 22 de octubre de 2026 (semana 14): 42 comprobaciones de C# y 330 HTTP aprobadas en `BibliotecaMVC_Test_Roles_20261022`, incluyendo la matriz de permisos de Libros, Autores y Categorías por rol, acceso directo a URL restringidas, CRUD completo de Libros con la cuenta Bibliotecario y la migración de los roles anteriores sin duplicados (renombrado, o traslado cuando los roles nuevos ya se insertaron por SQL). Revisión en navegador con las cuentas usuario, bibliotecario y admin.
 
 Referencia: [modelo de Identity y EF Core](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/customize-identity-model?view=aspnetcore-10.0).
