@@ -3,8 +3,7 @@
 @{
     ViewData["Title"] = "Libros";
     // Las acciones se muestran solo si el rol las permite; el controlador vuelve a comprobarlo.
-    var puedeEditar = User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.Bibliotecario);
-    var puedeEliminar = User.IsInRole(Roles.Administrador);
+    var puedeGestionar = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Bibliotecario);
 }
 
 <section class="module-page catalog-page">
@@ -12,9 +11,9 @@
         <header class="module-header">
             <div>
                 <h1>Libros</h1>
-                <p>@Model.Count() libros en el catálogo.@(puedeEditar ? "" : " Tu rol de Lector permite consultar el catálogo; agregar, editar y eliminar corresponde a bibliotecarios y administradores.")</p>
+                <p>@Model.Count() libros en el catálogo.@(puedeGestionar ? "" : " Tu rol de Usuario permite consultar el catálogo; agregar, editar y eliminar corresponde a los roles Bibliotecario y Admin.")</p>
             </div>
-            @if (puedeEditar)
+            @if (puedeGestionar)
             {
                 <a class="btn btn-primary" asp-action="Create">Agregar libro</a>
             }
@@ -30,7 +29,7 @@
 
         @if (!Model.Any())
         {
-            <div class="alert alert-info" role="status">Todavía no hay libros registrados.@(puedeEditar ? " Usa «Agregar libro» para comenzar." : "")</div>
+            <div class="alert alert-info" role="status">Todavía no hay libros registrados.@(puedeGestionar ? " Usa «Agregar libro» para comenzar." : "")</div>
         }
 
         <section class="catalog-book-grid" aria-label="Libros registrados">
@@ -50,14 +49,11 @@
                         <p class="catalog-book-description">@libro.Descripcion</p>
                         <div class="catalog-book-footer">
                             <span>@libro.AnioPublicacion</span>
-                            @if (puedeEditar)
+                            @if (puedeGestionar)
                             {
                                 <div class="action-group">
                                     <a class="row-action" asp-action="Edit" asp-route-id="@libro.ID">Editar</a>
-                                    @if (puedeEliminar)
-                                    {
-                                        <a class="row-action row-action-danger" asp-action="Delete" asp-route-id="@libro.ID">Eliminar</a>
-                                    }
+                                    <a class="row-action row-action-danger" asp-action="Delete" asp-route-id="@libro.ID">Eliminar</a>
                                 </div>
                             }
                         </div>

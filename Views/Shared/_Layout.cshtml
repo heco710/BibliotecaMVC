@@ -40,6 +40,10 @@
                         <li class="nav-item"><a class="nav-link @(currentController == "Autores" ? "active" : "")" aria-current="@(currentController == "Autores" ? "page" : null)" asp-controller="Autores" asp-action="Index">Autores</a></li>
                         <li class="nav-item"><a class="nav-link @(currentController == "Libros" ? "active" : "")" aria-current="@(currentController == "Libros" ? "page" : null)" asp-controller="Libros" asp-action="Index">Libros</a></li>
                         <li class="nav-item"><a class="nav-link @(currentController == "Home" && currentAction == "Usuarios" ? "active" : "")" aria-current="@(currentController == "Home" && currentAction == "Usuarios" ? "page" : null)" asp-controller="Home" asp-action="Usuarios">Usuarios</a></li>
+                        @if (User.IsInRole(Roles.Admin))
+                        {
+                            <li class="nav-item"><a class="nav-link @(currentController == "Usuarios" ? "active" : "")" aria-current="@(currentController == "Usuarios" ? "page" : null)" asp-controller="Usuarios" asp-action="Index">Roles</a></li>
+                        }
                         <li class="nav-item"><a class="nav-link @(currentController == "Home" && currentAction == "Prestamos" ? "active" : "")" aria-current="@(currentController == "Home" && currentAction == "Prestamos" ? "page" : null)" asp-controller="Home" asp-action="Prestamos">Préstamos <span class="nav-pending">Próximamente</span></a></li>
                         <li class="nav-item"><a class="nav-link @(currentController == "Home" && currentAction == "Acerca_de" ? "active" : "")" aria-current="@(currentController == "Home" && currentAction == "Acerca_de" ? "page" : null)" asp-controller="Home" asp-action="Acerca_de">Acerca de</a></li>
                         <partial name="_LoginPartial" />

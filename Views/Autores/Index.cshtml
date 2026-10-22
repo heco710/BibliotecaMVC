@@ -1,5 +1,10 @@
 @model IEnumerable<Autor>
-@{ ViewData["Title"] = "Autores"; }
+@{
+    ViewData["Title"] = "Autores";
+    // Las acciones se muestran solo si el rol las permite; el controlador vuelve a comprobarlo.
+    var puedeGestionar = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Bibliotecario);
+    var puedeEliminar = User.IsInRole(Roles.Admin);
+}
 
 <section class="module-page">
     <div class="container-xl">
@@ -8,7 +13,10 @@
                 <h1 id="authors-title">Autores</h1>
                 <p>@Model.Count() autores en el catálogo.</p>
             </div>
-            <a class="btn btn-primary" asp-action="Create">Agregar autor</a>
+            @if (puedeGestionar)
+            {
+                <a class="btn btn-primary" asp-action="Create">Agregar autor</a>
+            }
         </header>
         @if (TempData["Mensaje"] is string mensaje)
         {
@@ -20,7 +28,7 @@
         <section class="author-directory" aria-labelledby="authors-title">
             @if (!Model.Any())
             {
-                <p class="py-4">Todavía no hay autores registrados. Usa «Agregar autor» para comenzar.</p>
+                <p class="py-4">Todavía no hay autores registrados.@(puedeGestionar ? " Usa «Agregar autor» para comenzar." : "")</p>
             }
             @foreach (var autor in Model)
             {
@@ -31,10 +39,16 @@
                         <p>@autor.Nacionalidad <span aria-hidden="true">·</span> Nació el @autor.FechaNacimiento.ToString("dd/MM/yyyy")</p>
                         <p class="author-status">@(autor.Activo ? "Activo en el catálogo" : "Inactivo en el catálogo")</p>
                     </div>
-                    <div class="action-group">
-                        <a class="row-action" asp-action="Edit" asp-route-id="@autor.ID" aria-label="Editar a @autor.Nombre @autor.Apellido">Editar</a>
-                        <a class="row-action row-action-danger" asp-action="Delete" asp-route-id="@autor.ID" aria-label="Eliminar a @autor.Nombre @autor.Apellido">Eliminar</a>
-                    </div>
+                    @if (puedeGestionar)
+                    {
+                        <div class="action-group">
+                            <a class="row-action" asp-action="Edit" asp-route-id="@autor.ID" aria-label="Editar a @autor.Nombre @autor.Apellido">Editar</a>
+                            @if (puedeEliminar)
+                            {
+                                <a class="row-action row-action-danger" asp-action="Delete" asp-route-id="@autor.ID" aria-label="Eliminar a @autor.Nombre @autor.Apellido">Eliminar</a>
+                            }
+                        </div>
+                    }
                 </article>
             }
         </section>

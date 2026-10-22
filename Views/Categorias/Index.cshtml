@@ -1,5 +1,9 @@
 @model IReadOnlyList<Categoria>
-@{ ViewData["Title"] = "Categorías"; }
+@{
+    ViewData["Title"] = "Categorías";
+    // Las acciones se muestran solo si el rol las permite; el controlador vuelve a comprobarlo.
+    var puedeGestionar = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Bibliotecario);
+}
 
 <section class="module-page">
     <div class="container-xl">
@@ -8,7 +12,10 @@
                 <h1 id="categorias-titulo">Categorías</h1>
                 <p>@Model.Count categorías registradas.</p>
             </div>
-            <a class="btn btn-primary" asp-action="Create">Agregar categoría</a>
+            @if (puedeGestionar)
+            {
+                <a class="btn btn-primary" asp-action="Create">Agregar categoría</a>
+            }
         </header>
         @if (TempData["Mensaje"] is string mensaje)
         {
@@ -22,27 +29,33 @@
             {
                 <div class="p-4 text-center">
                     <h3 class="h5">Todavía no hay categorías</h3>
-                    <p>Agrega la primera categoría para comenzar a organizar la colección.</p>
-                    <a class="btn btn-outline-primary" asp-action="Create">Crear una categoría</a>
+                    @if (puedeGestionar)
+                    {
+                        <p>Agrega la primera categoría para comenzar a organizar la colección.</p>
+                        <a class="btn btn-outline-primary" asp-action="Create">Crear una categoría</a>
+                    }
                 </div>
             }
             else
             {
                 <div class="table-responsive" tabindex="0" role="region" aria-label="Categorías; desplaza horizontalmente para ver todas las columnas">
                     <table class="table category-table align-middle mb-0">
-                        <thead><tr><th scope="col">Nombre</th><th scope="col">Descripción</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+                        <thead><tr><th scope="col">Nombre</th><th scope="col">Descripción</th>@if (puedeGestionar) {<th scope="col" class="text-end">Acciones</th>}</tr></thead>
                         <tbody>
                         @foreach (var categoria in Model)
                         {
                             <tr>
                                 <th scope="row"><a asp-action="Details" asp-route-id="@categoria.ID">@categoria.Nombre</a></th>
                                 <td class="category-description">@(categoria.Descripcion ?? "Sin descripción")</td>
-                                <td>
-                                    <div class="action-group justify-content-end">
-                                        <a class="row-action" asp-action="Edit" asp-route-id="@categoria.ID" aria-label="Editar @categoria.Nombre">Editar</a>
-                                        <a class="row-action row-action-danger" asp-action="Delete" asp-route-id="@categoria.ID" aria-label="Eliminar @categoria.Nombre">Eliminar</a>
-                                    </div>
-                                </td>
+                                @if (puedeGestionar)
+                                {
+                                    <td>
+                                        <div class="action-group justify-content-end">
+                                            <a class="row-action" asp-action="Edit" asp-route-id="@categoria.ID" aria-label="Editar @categoria.Nombre">Editar</a>
+                                            <a class="row-action row-action-danger" asp-action="Delete" asp-route-id="@categoria.ID" aria-label="Eliminar @categoria.Nombre">Eliminar</a>
+                                        </div>
+                                    </td>
+                                }
                             </tr>
                         }
                         </tbody>

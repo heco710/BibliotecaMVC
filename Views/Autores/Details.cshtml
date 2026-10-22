@@ -22,10 +22,16 @@
                     <div><dt>Nacionalidad</dt><dd>@Model.Nacionalidad</dd></div>
                     <div><dt>Fecha de nacimiento</dt><dd>@Model.FechaNacimiento.ToString("dd 'de' MMMM 'de' yyyy")</dd></div>
                 </dl>
-                <div class="form-actions">
-                    <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.ID">Eliminar</a>
-                    <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.ID">Editar autor</a>
-                </div>
+                @if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Bibliotecario))
+                {
+                    <div class="form-actions">
+                        @if (User.IsInRole(Roles.Admin))
+                        {
+                            <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.ID">Eliminar</a>
+                        }
+                        <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.ID">Editar autor</a>
+                    </div>
+                }
             </article>
         </div>
     </div>
