@@ -29,8 +29,9 @@ Con la base preparada, basta con ejecutar `dotnet run --launch-profile http`: al
 
 ## Funcionalidad
 
-- Libros: consulta para cualquier usuario con rol; agregar y editar para Bibliotecario y Administrador; eliminar solo para Administrador.
-- Autores y categorías: consulta pública; creación, edición y eliminación con sesión iniciada.
+- Libros: consulta para cualquier usuario con rol; agregar, editar y eliminar para Bibliotecario y Admin.
+- Autores: consulta pública; agregar y editar para Bibliotecario y Admin; eliminar solo para Admin.
+- Categorías: consulta pública; agregar, editar y eliminar para Bibliotecario y Admin.
 - Portadas: una de las cuatro del catálogo o una imagen propia (JPG, PNG o WEBP, máximo 2 MB) guardada en `wwwroot/images/libros`.
 - Confirmación con SweetAlert2 antes de guardar cambios en los formularios de edición.
 - El ISBN de cada libro es único.
@@ -57,25 +58,26 @@ Autor y Categoria del libro son campos de texto. Préstamos está pendiente de i
 
 Autenticación identifica al usuario; autorización decide qué puede hacer. Haber iniciado sesión no da acceso a todas las operaciones.
 
-| Rol | Libros | Otros permisos |
-|---|---|---|
-| Lector | Consultar listado y detalle | — |
-| Bibliotecario | Consultar, agregar y editar | — |
-| Administrador | Consultar, agregar, editar y eliminar | Asignar roles en `/Usuarios` |
+| Rol | Libros | Autores | Categorías | Otros permisos |
+|---|---|---|---|---|
+| Usuario | Consultar | Consultar | Consultar | — |
+| Bibliotecario | Consultar, agregar, editar y eliminar | Consultar, agregar y editar | Consultar, agregar, editar y eliminar | — |
+| Admin | Consultar, agregar, editar y eliminar | Consultar, agregar, editar y eliminar | Consultar, agregar, editar y eliminar | Asignar roles en `/Usuarios` |
 
 - `BibliotecaContext` hereda de `IdentityDbContext<IdentityUser>` y la migración `AgregarRoles` añade las tablas de roles.
-- `LibrosController` usa `[Authorize(Roles = ...)]` por acción; las constantes están en `Models/Roles.cs`.
-- Las vistas ocultan los botones que el rol no puede usar. Si se accede directamente a una URL restringida, se muestra `/Account/AccesoDenegado` (HTTP 403) con el rol actual y los permisos necesarios.
-- Las cuentas nuevas reciben el rol Lector. Al iniciar, los usuarios existentes sin rol reciben Lector.
-- Un Administrador cambia roles en `/Usuarios` (enlace en la página Usuarios). No puede cambiar su propio rol. El cambio se aplica cuando el usuario vuelve a iniciar sesión, o como máximo en 30 minutos.
+- `LibrosController`, `AutoresController` y `CategoriasController` usan `[Authorize(Roles = ...)]` por acción; las constantes están en `Models/Roles.cs`.
+- `RoleManager<IdentityRole>` crea los roles Admin, Bibliotecario y Usuario al iniciar si no existen. Los roles `Administrador` y `Lector` de versiones anteriores se renombran a `Admin` y `Usuario`, conservando las asignaciones. Si los roles nuevos ya existían (por ejemplo, insertados por SQL), los usuarios se trasladan y los roles anteriores se eliminan.
+- Las vistas ocultan con `User.IsInRole(...)` los botones que el rol no puede usar, y el menú muestra **Roles** solo al Admin. Si se accede directamente a una URL restringida, se muestra `/Account/AccesoDenegado` (HTTP 403) con el rol actual y los permisos necesarios.
+- Las cuentas nuevas reciben el rol Usuario mediante `UserManager<IdentityUser>`. Al iniciar, los usuarios existentes sin rol reciben Usuario.
+- Un Admin cambia roles en `/Usuarios` (menú **Roles**). No puede cambiar su propio rol. El cambio se aplica cuando el usuario vuelve a iniciar sesión, o como máximo en 30 minutos.
 
 Cuentas de prueba (solo en Development, definidas en `appsettings.Development.json`):
 
 | Usuario | Contraseña | Rol |
 |---|---|---|
-| `admin` | `Admin#2026` | Administrador |
+| `admin` | `Admin#2026` | Admin |
 | `bibliotecario` | `Biblio#2026` | Bibliotecario |
-| `lector` | `Lector#2026` | Lector |
+| `usuario` | `Usuario#2026` | Usuario |
 
 ## Pruebas
 
@@ -95,5 +97,7 @@ Si Windows impide ejecutar el script de preparación, usa `powershell.exe -NoPro
 Verificación realizada el 30 de septiembre de 2026: compilación sin advertencias ni errores, 37 comprobaciones de C# y 253 comprobaciones HTTP aprobadas en `BibliotecaMVC_Test_Identity_20260930`. La migración también se aplicó a `BibliotecaDB` y se compararon todas las filas del catálogo antes y después, sin cambios. Login y Registro se revisaron en navegador; a 390 px no presentan desbordamiento horizontal. Tras exigir sesión en el CRUD y añadir la migración `IndiceUnicoIsbn`: 38 comprobaciones de C# y 262 HTTP aprobadas en la misma base.
 
 Verificación del 13 de octubre de 2026 (roles): 42 comprobaciones de C# y 311 HTTP aprobadas en `BibliotecaMVC_Test_Roles_20261013`, incluyendo acceso por rol, acceso directo denegado, asignación de roles y subida de portadas. Revisión en navegador con las cuentas Lector y Administrador.
+
+Verificación del 22 de octubre de 2026 (semana 14): 42 comprobaciones de C# y 330 HTTP aprobadas en `BibliotecaMVC_Test_Roles_20261022`, incluyendo la matriz de permisos de Libros, Autores y Categorías por rol, acceso directo a URL restringidas, CRUD completo de Libros con la cuenta Bibliotecario y la migración de los roles anteriores sin duplicados (renombrado, o traslado cuando los roles nuevos ya se insertaron por SQL). Revisión en navegador con las cuentas usuario, bibliotecario y admin.
 
 Referencia: [modelo de Identity y EF Core](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/customize-identity-model?view=aspnetcore-10.0).

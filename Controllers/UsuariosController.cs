@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BibliotecaMVC.Controllers;
 
-// Solo el Administrador consulta y asigna los roles de los usuarios registrados.
-[Authorize(Roles = Roles.Administrador)]
+// Solo el Admin consulta y asigna los roles de los usuarios registrados.
+[Authorize(Roles = Roles.Admin)]
 public sealed class UsuariosController(UserManager<IdentityUser> users) : Controller
 {
     public async Task<IActionResult> Index()

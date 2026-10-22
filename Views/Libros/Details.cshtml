@@ -23,13 +23,10 @@
                     <div><dt>Primera publicación</dt><dd>@Model.AnioPublicacion</dd></div>
                     <div><dt>ISBN</dt><dd>@Model.ISBN</dd></div>
                 </dl>
-                @if (User.IsInRole(Roles.Administrador) || User.IsInRole(Roles.Bibliotecario))
+                @if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Bibliotecario))
                 {
                     <div class="form-actions">
-                        @if (User.IsInRole(Roles.Administrador))
-                        {
-                            <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.ID">Eliminar</a>
-                        }
+                        <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.ID">Eliminar</a>
                         <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.ID">Editar libro</a>
                     </div>
                 }

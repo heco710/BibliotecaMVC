@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BibliotecaMVC.Controllers;
 
 // Autenticación: quién es el usuario. Autorización: qué puede hacer según su rol.
-// Consultar: cualquier rol. Agregar y editar: Bibliotecario o Administrador. Eliminar: solo Administrador.
+// Consultar: Usuario, Bibliotecario o Admin. Agregar, editar y eliminar: Bibliotecario o Admin.
 [Authorize(Roles = Roles.Todos)]
 public class LibrosController(ILibroService servicio) : Controller
 {
@@ -56,7 +56,7 @@ public class LibrosController(ILibroService servicio) : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [Authorize(Roles = Roles.Administrador)]
+    [Authorize(Roles = Roles.Gestores)]
     public async Task<IActionResult> Delete(int id)
     {
         var libro = await servicio.ObtenerPorIdAsync(id);
@@ -65,7 +65,7 @@ public class LibrosController(ILibroService servicio) : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = Roles.Administrador)]
+    [Authorize(Roles = Roles.Gestores)]
     public async Task<IActionResult> DeleteConfirmed([FromRoute] int id)
     {
         if (!await servicio.EliminarAsync(id)) return NotFound();

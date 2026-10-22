@@ -8,10 +8,13 @@
             <article class="entity-form-card">
                 <h1>@Model.Nombre</h1>
                 <p class="category-description">@(Model.Descripcion ?? "Sin descripción")</p>
-                <div class="form-actions">
-                    <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.ID">Eliminar</a>
-                    <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.ID">Editar categoría</a>
-                </div>
+                @if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Bibliotecario))
+                {
+                    <div class="form-actions">
+                        <a class="btn btn-outline-danger" asp-action="Delete" asp-route-id="@Model.ID">Eliminar</a>
+                        <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.ID">Editar categoría</a>
+                    </div>
+                }
             </article>
         </div>
     </div>

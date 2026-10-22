@@ -157,35 +157,49 @@ def multipart(path, fields, file_field, filename, content, content_type, form):
         return response.status, response.read().decode(errors="replace"), response.headers
 
 def authorization_checks(user):
-    # Lector: consulta, pero no ve ni puede ejecutar acciones de escritura.
+    # Usuario: consulta, pero no ve ni puede ejecutar acciones de escritura.
     login(user, "Prueba-Identity9!")
     status, body, _ = request("/Libros")
-    check(status == 200 and "Agregar libro" not in body and "/Libros/Edit/" not in body, "Lector sees catalog without write actions")
-    check("Tu rol de Lector" in body, "Lector sees clear role message")
+    check(status == 200 and "Agregar libro" not in body and "/Libros/Edit/" not in body, "Usuario sees catalog without write actions")
+    check("Tu rol de Usuario" in body, "Usuario sees clear role message")
     first = re.search(r'href="/Libros/Details/(\d+)"', body).group(1)
     status, body, _ = request("/Libros/Details/" + first)
-    check(status == 200 and "Editar libro" not in body and "/Libros/Delete/" not in body, "Lector details without actions")
+    check(status == 200 and "Editar libro" not in body and "/Libros/Delete/" not in body, "Usuario details without actions")
     for path in ("/Libros/Create", "/Libros/Edit/" + first, "/Libros/Delete/" + first, "/Usuarios"):
-        check(denied(path), "Lector denied " + path)
-    check(denied("/Libros/Delete/" + first, {"__RequestVerificationToken": token("/Libros")}), "Lector cannot POST delete")
+        check(denied(path), "Usuario denied " + path)
+    check(denied("/Libros/Delete/" + first, {"__RequestVerificationToken": token("/Libros")}), "Usuario cannot POST delete")
     check(request("/Libros/Details/" + first)[0] == 200, "Denied delete kept the book")
     status, body, _ = request("/Account/AccesoDenegado")
-    check(status == 403 and "No tienes permiso" in html.unescape(body) and "Lector" in body, "Clear access denied page")
-    # Bibliotecario: agrega y edita, no elimina.
+    check(status == 403 and "No tienes permiso" in html.unescape(body) and "Usuario" in body, "Clear access denied page")
+    autor = re.search(r'href="/Autores/Details/(\d+)"', request("/Autores")[1]).group(1)
+    for controller, label in (("Autores", "Agregar autor"), ("Categorias", "Agregar categoría")):
+        status, body, _ = request("/" + controller)
+        check(status == 200 and label not in html.unescape(body) and "/" + controller + "/Edit/" not in body, "Usuario reads " + controller + " without actions")
+        check(denied("/" + controller + "/Create"), "Usuario denied " + controller + "/Create")
+    check(denied("/Autores/Delete/" + autor, {"__RequestVerificationToken": token("/Autores")}), "Usuario cannot POST delete author")
+    # Bibliotecario: agrega, edita y elimina libros; no asigna roles.
     login_role("Bibliotecario")
     status, body, _ = request("/Libros")
-    check(status == 200 and "Agregar libro" in body and "/Libros/Edit/" in body and "/Libros/Delete/" not in body, "Bibliotecario actions")
-    check(request("/Libros/Create")[0] == 200 and request("/Libros/Edit/" + first)[0] == 200, "Bibliotecario can open create/edit")
-    check(denied("/Libros/Delete/" + first) and denied("/Usuarios"), "Bibliotecario cannot delete or manage roles")
-    # Administrador: todo, incluida la asignación de roles.
-    login_role("Administrador")
+    check(status == 200 and "Agregar libro" in body and "/Libros/Edit/" in body and "/Libros/Delete/" in body, "Bibliotecario actions")
+    check(all(request(path)[0] == 200 for path in ("/Libros/Create", "/Libros/Edit/" + first, "/Libros/Delete/" + first)), "Bibliotecario can open create/edit/delete")
+    check(denied("/Usuarios") and 'href="/Usuarios"' not in body, "Bibliotecario cannot manage roles")
+    status, body, _ = request("/Autores")
+    check("/Autores/Edit/" in body and "/Autores/Delete/" not in body, "Bibliotecario author actions without delete")
+    check(request("/Autores/Create")[0] == 200 and request("/Autores/Edit/" + autor)[0] == 200, "Bibliotecario can open author create/edit")
+    check(denied("/Autores/Delete/" + autor), "Bibliotecario cannot delete authors")
+    status, body, _ = request("/Categorias")
+    check("/Categorias/Edit/" in body and "/Categorias/Delete/" in body and request("/Categorias/Create")[0] == 200, "Bibliotecario manages categories")
+    # Admin: todo, incluida la asignación de roles.
+    login_role("Admin")
     status, body, _ = request("/Libros")
-    check("/Libros/Delete/" in body and request("/Libros/Delete/" + first)[0] == 200, "Administrador can delete")
+    check("/Libros/Delete/" in body and request("/Libros/Delete/" + first)[0] == 200, "Admin can delete")
+    check('href="/Usuarios"' in body, "Admin sees roles menu")
+    check("/Autores/Delete/" in request("/Autores")[1] and request("/Autores/Delete/" + autor)[0] == 200, "Admin can delete authors")
     status, body, _ = request("/Usuarios")
     rows = re.findall(r'<tr>.*?</tr>', body, re.S)
     row = next(r for r in rows if user + "<" in r)
     user_id = re.search(r'action="/Usuarios/AsignarRol/([^"]+)"', row).group(1)
-    check(status == 200 and "Lector" in row, "Administrador sees user roles")
+    check(status == 200 and "Usuario" in row, "Admin sees user roles")
     check(post("/Usuarios/AsignarRol/" + user_id, {"rol": "NoExiste"}, "/Usuarios")[0] == 400, "Reject unknown role")
     check(post("/Usuarios/AsignarRol/" + user_id, {"rol": "Bibliotecario"}, "/Usuarios")[0] == 302, "Assign role")
     login(user, "Prueba-Identity9!")
@@ -256,7 +270,6 @@ try:
                                              "Password": "Prueba-Identity9!", "ConfirmarPassword": "Prueba-Identity9!"})
     check(status == 302, "Register CRUD account")
     authorization_checks(crud_user)
-    login_role("Administrador")
     marker = "Prueba " + str(time.time_ns())
     cases = [
         ("Libros", {"Titulo": marker, "Autor": "Autora", "Categoria": "Novela", "AnioPublicacion": "2020", "ISBN": "978-123", "Imagen": "ficciones.png", "Descripcion": "", "Disponible": "true"}, "Titulo"),
@@ -264,6 +277,8 @@ try:
         ("Categorias", {"Nombre": marker, "Descripcion": ""}, "Nombre"),
     ]
     for controller, values, title_key in cases:
+        # Libros y Categorías los ejecuta el Bibliotecario para comprobar sus permisos en el servidor; Autores requiere Admin para eliminar.
+        login_role("Admin" if controller == "Autores" else "Bibliotecario")
         base = "/" + controller
         check(request(base)[0] == 200, "Index " + controller)
         check(request(base + "/Create", values)[0] == 400, "Reject missing antiforgery " + controller)
