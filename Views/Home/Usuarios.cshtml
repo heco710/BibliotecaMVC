@@ -6,7 +6,7 @@
     {
         var rol = Roles.Lista.FirstOrDefault(User.IsInRole) ?? "Sin rol";
         <p class="editorial-lead">Has iniciado sesión como <strong>@User.Identity.Name</strong> con el rol <strong>@rol</strong>. @Roles.Descripcion(rol)</p>
-        @if (User.IsInRole(Roles.Administrador))
+        @if (User.IsInRole(Roles.Admin))
         {
             <p><a class="text-link" asp-controller="Usuarios" asp-action="Index">Administrar roles de usuarios <span aria-hidden="true">→</span></a></p>
         }

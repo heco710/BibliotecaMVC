@@ -9,12 +9,20 @@ public static class InicializadorIdentidad
     private sealed record UsuarioInicial(string Usuario, string Email, string Password, string Rol);
 
     // Aplica migraciones pendientes, crea los roles, crea las cuentas de "UsuariosIniciales"
-    // y asigna Lector a los usuarios existentes que todavía no tienen rol.
+    // y asigna Usuario a los usuarios existentes que todavía no tienen rol.
     public static async Task InicializarAsync(IServiceProvider servicios, IConfiguration configuracion)
     {
         await servicios.GetRequiredService<BibliotecaContext>().Database.MigrateAsync();
 
         var roles = servicios.GetRequiredService<RoleManager<IdentityRole>>();
+        // Renombrar en lugar de crear de nuevo conserva las asignaciones de AspNetUserRoles.
+        foreach (var (anterior, actual) in Roles.Renombrados)
+        {
+            var rolAnterior = await roles.FindByNameAsync(anterior);
+            if (rolAnterior is null || await roles.RoleExistsAsync(actual)) continue;
+            Exigir(await roles.SetRoleNameAsync(rolAnterior, actual), anterior);
+            Exigir(await roles.UpdateAsync(rolAnterior), anterior);
+        }
         foreach (var rol in Roles.Lista)
         {
             if (!await roles.RoleExistsAsync(rol)) Exigir(await roles.CreateAsync(new IdentityRole(rol)), rol);
@@ -39,7 +47,7 @@ public static class InicializadorIdentidad
         foreach (var usuario in await usuarios.Users.ToListAsync())
         {
             if ((await usuarios.GetRolesAsync(usuario)).Count == 0)
-                Exigir(await usuarios.AddToRoleAsync(usuario, Roles.Lector), usuario.UserName);
+                Exigir(await usuarios.AddToRoleAsync(usuario, Roles.Usuario), usuario.UserName);
         }
     }
 

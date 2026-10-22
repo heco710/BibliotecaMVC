@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BibliotecaMVC.Controllers;
 
+// Consultar: cualquier visitante. Agregar, editar y eliminar: Bibliotecario o Admin.
 [Authorize]
 public class CategoriasController(ICategoriaService servicio) : Controller
 {
@@ -18,10 +19,12 @@ public class CategoriasController(ICategoriaService servicio) : Controller
         return categoria is null ? NotFound() : View(categoria);
     }
 
+    [Authorize(Roles = Roles.Gestores)]
     public IActionResult Create() => View(new Categoria());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Gestores)]
     public async Task<IActionResult> Create(Categoria categoria)
     {
         if (!ModelState.IsValid) return View(categoria);
@@ -32,6 +35,7 @@ public class CategoriasController(ICategoriaService servicio) : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = Roles.Gestores)]
     public async Task<IActionResult> Edit(int id)
     {
         var categoria = await servicio.ObtenerPorIdAsync(id);
@@ -40,6 +44,7 @@ public class CategoriasController(ICategoriaService servicio) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Gestores)]
     public async Task<IActionResult> Edit([FromRoute] int id, Categoria categoria)
     {
         if (id != categoria.ID) return BadRequest();
@@ -52,6 +57,7 @@ public class CategoriasController(ICategoriaService servicio) : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = Roles.Gestores)]
     public async Task<IActionResult> Delete(int id)
     {
         var categoria = await servicio.ObtenerPorIdAsync(id);
@@ -60,6 +66,7 @@ public class CategoriasController(ICategoriaService servicio) : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Gestores)]
     public async Task<IActionResult> DeleteConfirmed([FromRoute] int id)
     {
         if (!await servicio.EliminarAsync(id)) return NotFound();

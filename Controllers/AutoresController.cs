@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BibliotecaMVC.Controllers;
 
+// Consultar: cualquier visitante. Agregar y editar: Bibliotecario o Admin. Eliminar: solo Admin.
 [Authorize]
 public class AutoresController(IAutorService servicio) : Controller
 {
@@ -18,10 +19,12 @@ public class AutoresController(IAutorService servicio) : Controller
         return autor is null ? NotFound() : View(autor);
     }
 
+    [Authorize(Roles = Roles.Gestores)]
     public IActionResult Create() => View(new Autor { FechaNacimiento = DateTime.Today, Activo = true });
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Gestores)]
     public async Task<IActionResult> Create(Autor autor)
     {
         if (!ModelState.IsValid) return View(autor);
@@ -32,6 +35,7 @@ public class AutoresController(IAutorService servicio) : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = Roles.Gestores)]
     public async Task<IActionResult> Edit(int id)
     {
         var autor = await servicio.ObtenerPorIdAsync(id);
@@ -40,6 +44,7 @@ public class AutoresController(IAutorService servicio) : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Gestores)]
     public async Task<IActionResult> Edit([FromRoute] int id, Autor autor)
     {
         if (id != autor.ID) return BadRequest();
@@ -52,6 +57,7 @@ public class AutoresController(IAutorService servicio) : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
         var autor = await servicio.ObtenerPorIdAsync(id);
@@ -60,6 +66,7 @@ public class AutoresController(IAutorService servicio) : Controller
 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> DeleteConfirmed([FromRoute] int id)
     {
         if (!await servicio.EliminarAsync(id)) return NotFound();

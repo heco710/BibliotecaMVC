@@ -48,9 +48,9 @@ public sealed class AccountController(UserManager<IdentityUser> users, SignInMan
         var result = await users.CreateAsync(user, model.Password);
         if (result.Succeeded)
         {
-            // Toda cuenta nueva empieza como Lector; un Administrador puede cambiar su rol en /Usuarios.
-            var rol = await users.AddToRoleAsync(user, Roles.Lector);
-            if (!rol.Succeeded) throw new InvalidOperationException("No se pudo asignar el rol Lector a la cuenta nueva.");
+            // Toda cuenta nueva empieza como Usuario; un Admin puede cambiar su rol en /Usuarios.
+            var rol = await users.AddToRoleAsync(user, Roles.Usuario);
+            if (!rol.Succeeded) throw new InvalidOperationException("No se pudo asignar el rol Usuario a la cuenta nueva.");
             await signIn.SignInAsync(user, isPersistent: false);
             return Volver(model.ReturnUrl);
         }
