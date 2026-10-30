@@ -1,0 +1,69 @@
+@model PaginaEstadoViewModel
+@* Partial reutilizable para Error, ErrorDeDatos, Estado (404, 400...) y AccesoDenegado. *@
+<section class="module-page status-page status-@Model.Tono" aria-labelledby="estado-titulo">
+    <div class="container-xl">
+        <div class="status-layout">
+            <div class="status-visual" aria-hidden="true">
+                <span class="status-code">@Model.Codigo</span>
+                <span class="status-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        @switch (Model.Icono)
+                        {
+                            case "candado":
+                                <rect x="5" y="10.5" width="14" height="10" rx="1.5" />
+                                <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+                                <path d="M12 14.5v2.5" />
+                                break;
+                            case "busqueda":
+                                <circle cx="10.5" cy="10.5" r="6" />
+                                <path d="m15 15 5 5" />
+                                <path d="M8.5 10.5h4" />
+                                break;
+                            case "datos":
+                                <ellipse cx="12" cy="6" rx="7" ry="2.75" />
+                                <path d="M5 6v6c0 1.5 3.1 2.75 7 2.75s7-1.25 7-2.75V6" />
+                                <path d="M5 12v6c0 1.5 3.1 2.75 7 2.75 1 0 1.9-.08 2.75-.22" />
+                                <path d="M19 15.5v2.5M19 20.5v.01" />
+                                break;
+                            default:
+                                <path d="M12 3.5 21.5 20h-19L12 3.5Z" />
+                                <path d="M12 10v4.5" />
+                                <path d="M12 17.25v.01" />
+                                break;
+                        }
+                    </svg>
+                </span>
+            </div>
+
+            <div class="status-content">
+                <span class="module-kicker">@Model.Etiqueta</span>
+                <h1 id="estado-titulo">@Model.Titulo</h1>
+                <p class="status-lead">@Model.Mensaje</p>
+                @if (!string.IsNullOrEmpty(Model.Detalle))
+                {
+                    <p class="status-detail">@Model.Detalle</p>
+                }
+
+                @if (Model.Acciones.Count > 0)
+                {
+                    <div class="status-actions">
+                        @foreach (var accion in Model.Acciones)
+                        {
+                            <a class="btn @(accion.Principal ? "btn-primary" : "btn-outline-secondary")" href="@accion.Url">@accion.Texto</a>
+                        }
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Referencia))
+                {
+                    <p class="status-reference">Si el problema continúa, comunica este código de referencia a un administrador: <code>@Model.Referencia</code></p>
+                }
+            </div>
+        </div>
+
+        @if (Model.MostrarSecciones)
+        {
+            @await Component.InvokeAsync("SeccionesDisponibles")
+        }
+    </div>
+</section>

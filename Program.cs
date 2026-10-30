@@ -72,12 +72,17 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
+// Development muestra la página de excepciones del desarrollador; en producción UseExceptionHandler centraliza
+// las excepciones no controladas en /Home/Error, que solo muestra un mensaje general y un código de referencia.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+// Respuestas sin contenido (NotFound(), BadRequest(), rutas inexistentes) muestran una página propia en lugar de
+// la pantalla en blanco del navegador. Conserva el código HTTP original.
+app.UseStatusCodePagesWithReExecute("/Home/Estado/{0}");
 
 app.UseHttpsRedirection();
 // Sirve las portadas subidas en tiempo de ejecución (wwwroot/images/libros), que MapStaticAssets no conoce.

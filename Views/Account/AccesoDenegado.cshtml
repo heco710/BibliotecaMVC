@@ -1,17 +1,47 @@
 @{
     ViewData["Title"] = "Acceso denegado";
     var rol = Roles.Lista.FirstOrDefault(User.IsInRole) ?? "Sin rol";
+
+    // ReturnUrl llega como /Controlador/Accion/id; se traduce a texto legible para explicar qué se intentó.
+    var partes = (ViewData["Recurso"] as string)?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
+    var controlador = partes.ElementAtOrDefault(0);
+    var accion = partes.ElementAtOrDefault(1) ?? "Index";
+    var modulo = controlador?.ToLowerInvariant() switch
+    {
+        "libros" => "Libros",
+        "categorias" => "Categorías",
+        "autores" => "Autores",
+        "usuarios" => "Roles",
+        _ => null
+    };
+    var operacion = accion.ToLowerInvariant() switch
+    {
+        "create" => "agregar registros",
+        "edit" => "editar registros",
+        "delete" => "eliminar registros",
+        _ => "consultar esta sección"
+    };
+
+    var acciones = new List<AccionEstado>();
+    // Volver al listado del módulo solo si lo denegado fue una operación dentro de él, no el listado mismo.
+    if (modulo is not null && !accion.Equals("Index", StringComparison.OrdinalIgnoreCase))
+        acciones.Add(new($"Volver a {modulo}", Url.Action("Index", controlador)!, Principal: true));
+    acciones.Add(new("Ir al inicio", Url.Action("Index", "Home")!, Principal: acciones.Count == 0));
+
+    var estado = new PaginaEstadoViewModel
+    {
+        Codigo = "403",
+        Etiqueta = "Acceso denegado",
+        Titulo = "No tienes permiso para realizar esta operación",
+        Mensaje = User.Identity?.IsAuthenticated != true
+            ? "Esta operación requiere iniciar sesión con una cuenta que tenga los permisos necesarios."
+            : modulo is null
+            ? $"Iniciaste sesión como {User.Identity?.Name} con el rol {rol}, que no permite esta operación."
+            : $"Intentaste {operacion} en {modulo}, pero tu rol {rol} no lo permite. Iniciaste sesión como {User.Identity?.Name}.",
+        Detalle = $"Tu rol permite: {Roles.Descripcion(rol)} Agregar, editar y eliminar libros y categorías corresponde a Bibliotecario y Admin; eliminar autores y asignar roles, solo al Admin. Si necesitas otro nivel de acceso, solicítalo a un administrador.",
+        Icono = "candado",
+        Tono = "aviso",
+        Acciones = acciones
+    };
 }
-<section class="module-page">
-    <div class="container-xl">
-        <div class="entity-form-shell">
-            <div class="alert alert-warning" role="alert">
-                <h1 class="h3">No tienes permiso para realizar esta operación</h1>
-                <p>Iniciaste sesión como <strong>@User.Identity?.Name</strong> con el rol <strong>@rol</strong>: @Roles.Descripcion(rol)</p>
-                <p>Agregar, editar y eliminar libros y categorías corresponde a los roles Bibliotecario y Admin. En autores, el Bibliotecario agrega y edita; eliminar autores y asignar roles corresponde solo al Admin. Si necesitas otro nivel de acceso, solicítalo a un administrador.</p>
-                <a class="btn btn-outline-secondary" asp-controller="Libros" asp-action="Index">Volver al catálogo</a>
-                <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Ir al inicio</a>
-            </div>
-        </div>
-    </div>
-</section>
+<partial name="_PaginaEstado" model="estado" />

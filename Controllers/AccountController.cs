@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace BibliotecaMVC.Controllers;
 
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-public sealed class AccountController(UserManager<IdentityUser> users, SignInManager<IdentityUser> signIn) : Controller
+public sealed class AccountController(UserManager<IdentityUser> users, SignInManager<IdentityUser> signIn,
+    ILogger<AccountController> logger) : Controller
 {
     [HttpGet]
     public IActionResult Login(string? returnUrl = null) => View(new LoginViewModel { ReturnUrl = returnUrl });
@@ -70,9 +71,13 @@ public sealed class AccountController(UserManager<IdentityUser> users, SignInMan
 
     // Destino de AccessDeniedPath: el usuario inició sesión, pero su rol no permite la operación.
     [HttpGet]
-    public IActionResult AccesoDenegado()
+    public IActionResult AccesoDenegado(string? returnUrl = null)
     {
+        // Solo se usa la ruta local, sin la consulta, para describir el recurso; cualquier otro valor se descarta.
+        var recurso = Url.IsLocalUrl(returnUrl) ? returnUrl!.Split('?', '#')[0] : null;
+        logger.LogWarning("Acceso denegado a {Recurso} para {Usuario}.", recurso ?? "(desconocido)", User.Identity?.Name);
         Response.StatusCode = StatusCodes.Status403Forbidden;
+        ViewData["Recurso"] = recurso;
         return View();
     }
 

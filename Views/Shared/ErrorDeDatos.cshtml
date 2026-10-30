@@ -1,20 +1,21 @@
-@{ ViewData["Title"] = "Servicio no disponible"; }
-<section class="module-page">
-    <div class="container-xl">
-        <div class="entity-form-shell">
-            <div class="alert alert-danger" role="alert">
-                <h1 class="h3">No se pudo completar la operación</h1>
-                <p>No se pudo acceder a los datos en este momento. Si estabas guardando cambios, comprueba el listado antes de volver a intentarlo.</p>
-                @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Account")
-                {
-                    <a class="btn btn-outline-danger" asp-controller="Account" asp-action="Login">Volver al inicio de sesión</a>
-                }
-                else
-                {
-                    <a class="btn btn-outline-danger" asp-action="Index">Volver al listado</a>
-                }
-                <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Ir al inicio</a>
-            </div>
-        </div>
-    </div>
-</section>
+@{
+    ViewData["Title"] = "Servicio no disponible";
+    var enCuenta = ViewContext.RouteData.Values["controller"]?.ToString() == "Account";
+    var estado = new PaginaEstadoViewModel
+    {
+        Codigo = "503",
+        Etiqueta = "Servicio no disponible",
+        Titulo = "No se pudo completar la operación",
+        Mensaje = "No se pudo acceder a los datos en este momento. Si estabas guardando cambios, comprueba el listado antes de volver a intentarlo.",
+        Icono = "datos",
+        Tono = "aviso",
+        Acciones =
+        [
+            enCuenta
+                ? new AccionEstado("Volver al inicio de sesión", Url.Action("Login", "Account")!, Principal: true)
+                : new AccionEstado("Volver al listado", Url.Action("Index")!, Principal: true),
+            new("Ir al inicio", Url.Action("Index", "Home")!)
+        ]
+    };
+}
+<partial name="_PaginaEstado" model="estado" />

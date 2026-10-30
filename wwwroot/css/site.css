@@ -5,6 +5,7 @@
   --surface: #fdfdf9;
   --line: #d9d9d1;
   --danger: #824b46;
+  --warning: #7a5c1e;
   --bs-body-color: var(--ink);
   --bs-body-bg: var(--paper);
   --bs-link-color: var(--ink);
@@ -227,4 +228,38 @@ textarea.form-control { min-height: 8rem; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* Páginas de estado (error, 404, acceso denegado, servicio no disponible): partial _PaginaEstado. */
+.status-page { --status-accent: var(--danger); --status-tint: #f3eae7; padding-block: clamp(2.5rem, 6vw, 4.5rem) 1rem; }
+.status-aviso { --status-accent: var(--warning); --status-tint: #f4efe2; }
+.status-info { --status-accent: var(--ink); --status-tint: #eeeee6; }
+.status-layout { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: clamp(2rem, 6vw, 5rem); align-items: center; }
+.status-visual { position: relative; display: grid; place-items: center; aspect-ratio: 1; border: 1px solid var(--line); border-top: 3px solid var(--status-accent); background: var(--status-tint); overflow: hidden; }
+.status-code { position: absolute; inset: auto 0 -.18em; color: var(--status-accent); font: 400 clamp(5rem, 11vw, 8.5rem)/1 Georgia, 'Times New Roman', serif; letter-spacing: -.06em; text-align: center; opacity: .14; }
+.status-icon { position: relative; display: grid; place-items: center; width: 96px; height: 96px; border: 1px solid var(--status-accent); border-radius: 50%; background: var(--surface); color: var(--status-accent); }
+.status-icon svg { width: 44px; height: 44px; }
+.status-content h1 { max-width: 18ch; margin-bottom: 1.25rem; font-size: clamp(2.1rem, 4vw, 3.2rem); }
+.status-content .module-kicker { color: var(--status-accent); }
+.status-lead { max-width: 38rem; margin-bottom: 1rem; font-size: 1.1rem; line-height: 1.75; }
+.status-detail { max-width: 38rem; color: var(--muted); font-size: .9375rem; }
+.status-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.75rem; }
+.status-reference { max-width: 38rem; margin: 1.75rem 0 0; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .8125rem; }
+.status-reference code { color: var(--ink); font-size: .8125rem; word-break: break-all; }
+.status-sections { margin-top: clamp(2.5rem, 5vw, 4rem); border-top: 1px solid var(--ink); }
+.status-sections-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; border: 1px solid var(--line); background: var(--line); }
+.status-section-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 96px; padding: 1.1rem 1.25rem; background: var(--surface); text-decoration: none; }
+.status-section-link strong { display: block; font: 400 1.35rem/1.2 Georgia, 'Times New Roman', serif; }
+.status-section-link small { display: block; margin-top: .3rem; color: var(--muted); font-size: .8125rem; line-height: 1.45; }
+.status-section-link > span:last-child { font-size: 1.2rem; transition: transform 150ms ease; }
+.status-section-link:hover { background: #efefe8; }
+.status-section-link:hover strong { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; }
+.status-section-link:hover > span:last-child { transform: translateX(4px); }
+.status-section-link:focus-visible { outline-offset: -3px; }
+@media (max-width: 767.98px) {
+  .status-layout { grid-template-columns: 1fr; gap: 1.75rem; }
+  .status-visual { max-width: 220px; }
+  .status-icon { width: 76px; height: 76px; }
+  .status-icon svg { width: 36px; height: 36px; }
+  .status-actions .btn { flex: 1 1 auto; }
 }

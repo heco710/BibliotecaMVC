@@ -1,0 +1,37 @@
+@model int
+@{
+    // Páginas para respuestas sin contenido (404, 400...), mostradas por UseStatusCodePagesWithReExecute.
+    var estado = Model switch
+    {
+        404 => new PaginaEstadoViewModel
+        {
+            Codigo = "404",
+            Etiqueta = "Página no encontrada",
+            Titulo = "No encontramos lo que buscas",
+            Mensaje = "La página o el registro que intentas abrir no existe o fue eliminado. Revisa la dirección o vuelve al catálogo.",
+            Icono = "busqueda",
+            Tono = "info",
+            Acciones = [new("Ir al inicio", Url.Action("Index", "Home")!, Principal: true)]
+        },
+        400 => new PaginaEstadoViewModel
+        {
+            Codigo = "400",
+            Etiqueta = "Solicitud no válida",
+            Titulo = "No pudimos procesar la solicitud",
+            Mensaje = "Los datos enviados no coinciden con lo esperado. Vuelve a abrir el formulario desde el listado e inténtalo de nuevo.",
+            Icono = "error",
+            Tono = "aviso",
+            Acciones = [new("Ir al inicio", Url.Action("Index", "Home")!, Principal: true)]
+        },
+        _ => new PaginaEstadoViewModel
+        {
+            Codigo = Model.ToString(),
+            Etiqueta = "Solicitud no completada",
+            Titulo = "No se pudo completar la solicitud",
+            Mensaje = "La operación no pudo realizarse en este momento. Vuelve al inicio o continúa en otra sección.",
+            Acciones = [new("Ir al inicio", Url.Action("Index", "Home")!, Principal: true)]
+        }
+    };
+    ViewData["Title"] = estado.Etiqueta;
+}
+<partial name="_PaginaEstado" model="estado" />
