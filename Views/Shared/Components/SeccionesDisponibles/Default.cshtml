@@ -1,0 +1,16 @@
+@model IReadOnlyList<BibliotecaMVC.ViewComponents.SeccionesDisponiblesViewComponent.Seccion>
+<nav class="status-sections" aria-labelledby="secciones-titulo">
+    <h2 id="secciones-titulo" class="directory-heading">Puedes continuar en</h2>
+    <div class="status-sections-grid">
+        @foreach (var seccion in Model)
+        {
+            <a class="status-section-link" asp-controller="@seccion.Controlador" asp-action="@seccion.Accion">
+                <span>
+                    <strong>@seccion.Titulo</strong>
+                    <small>@seccion.Descripcion</small>
+                </span>
+                <span aria-hidden="true">→</span>
+            </a>
+        }
+    </div>
+</nav>

@@ -79,6 +79,16 @@ Cuentas de prueba (solo en Development, definidas en `appsettings.Development.js
 | `bibliotecario` | `Biblio#2026` | Bibliotecario |
 | `usuario` | `Usuario#2026` | Usuario |
 
+## Logging y manejo de errores
+
+- `LibrosController` y `CategoriasController` reciben `ILogger<T>` junto a su servicio. `LogInformation` registra el inicio y el resultado de cada consulta, creación, edición y eliminación (con el usuario y el identificador o nombre del registro). `LogWarning` registra registros inexistentes, identificadores que no coinciden y datos rechazados por validación. Las excepciones de datos se registran con `LogError` en `ErrorDeDatosFilter`, sin bloques try-catch adicionales en los controladores. No se registran contraseñas, tokens ni cadenas de conexión.
+- En producción, `UseExceptionHandler("/Home/Error")` centraliza las excepciones no controladas: la página muestra un mensaje general y un código de referencia, y `HomeController.Error` registra con `LogError` el tipo de excepción, la ruta y esa referencia. En Development se mantiene la página de excepciones del desarrollador.
+- `UseStatusCodePagesWithReExecute("/Home/Estado/{0}")` muestra páginas propias para respuestas sin contenido (404, 400...), conservando el código HTTP.
+- `/Account/AccesoDenegado` (403) explica qué operación y módulo se intentó, el rol actual y sus permisos, y registra el intento con `LogWarning`. Las restricciones `[Authorize]` de los controladores no cambian.
+- Componentes reutilizables: la partial `Views/Shared/_PaginaEstado.cshtml` (modelo `PaginaEstadoViewModel`) da el mismo diseño a error, 404, servicio no disponible y acceso denegado; el View Component `SeccionesDisponibles` lista solo las secciones que el rol actual puede abrir.
+
+Para ver la página de error personalizada localmente, ejecuta con `ASPNETCORE_ENVIRONMENT=Production` (con `dotnet publish` para que se sirvan los estilos aislados). Los registros aparecen en la consola de `dotnet run` o en la ventana **Salida** de Visual Studio (opción «Mostrar salida de: ASP.NET Core Web Server»).
+
 ## Pruebas
 
 Las comprobaciones de integración requieren una base separada:
