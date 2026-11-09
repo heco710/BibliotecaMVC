@@ -263,3 +263,18 @@ textarea.form-control { min-height: 8rem; }
   .status-icon svg { width: 36px; height: 36px; }
   .status-actions .btn { flex: 1 1 auto; }
 }
+/* Reportes de libros: filtros, resumen y vista previa */
+.report-actions { display: flex; flex-wrap: wrap; gap: .75rem; flex-shrink: 0; }
+.report-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; align-items: end; gap: 1rem 1.5rem; margin-bottom: 1.75rem; padding: 1.25rem; border: 1px solid var(--line); background: var(--surface); }
+.report-filter-buttons { display: flex; align-items: center; gap: 1.25rem; }
+.report-summary { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1rem; margin: 0 0 2rem; }
+.report-summary > div { padding: 1rem 1.1rem; border: 1px solid var(--line); background: var(--surface); }
+.report-summary dt { color: var(--muted); font-size: .8125rem; font-weight: 500; }
+.report-summary dd { margin: .25rem 0 0; font-family: Georgia, 'Times New Roman', serif; font-size: 2rem; line-height: 1.1; }
+.report-table { min-width: 900px; }
+@media (max-width: 767.98px) {
+  .report-actions { width: 100%; }
+  .report-actions .btn { flex: 1 1 auto; }
+  .report-filters { grid-template-columns: 1fr; }
+  .report-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

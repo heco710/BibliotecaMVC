@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/BibliotecaMVC.Tests/BibliotecaMVC.Tests.csproj" />
+    <Project Path="tests/BibliotecaMVC.UnitTests/BibliotecaMVC.UnitTests.csproj" />
+  </Folder>
+  <Project Path="BibliotecaMVC.csproj" />
+</Solution>

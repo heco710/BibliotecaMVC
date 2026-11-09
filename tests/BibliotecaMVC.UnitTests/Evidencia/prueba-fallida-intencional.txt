@@ -1,0 +1,14 @@
+Prueba que falla intencionalmente (Actividad 5)
+Cambio temporal: Assert.Equal(25, libro.ID) -> Assert.Equal(26, libro.ID)
+
+[xUnit.net 00:00:00.31]     BibliotecaMVC.UnitTests.LibroServiceTests.AgregarAsync_LibroValido_GuardaYAsignaElIdGenerado [FAIL]
+  Failed BibliotecaMVC.UnitTests.LibroServiceTests.AgregarAsync_LibroValido_GuardaYAsignaElIdGenerado [1 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 26
+Actual:   25
+  Stack Trace:
+     at BibliotecaMVC.UnitTests.LibroServiceTests.AgregarAsync_LibroValido_GuardaYAsignaElIdGenerado() in tests/BibliotecaMVC.UnitTests/LibroServiceTests.cs:line 85
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     1, Passed:    60, Skipped:     0, Total:    61, Duration: 141 ms - BibliotecaMVC.UnitTests.dll (net10.0)

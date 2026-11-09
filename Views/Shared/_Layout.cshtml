@@ -39,6 +39,10 @@
                         <li class="nav-item"><a class="nav-link @(currentController == "Categorias" ? "active" : "")" aria-current="@(currentController == "Categorias" ? "page" : null)" asp-controller="Categorias" asp-action="Index">Categorías</a></li>
                         <li class="nav-item"><a class="nav-link @(currentController == "Autores" ? "active" : "")" aria-current="@(currentController == "Autores" ? "page" : null)" asp-controller="Autores" asp-action="Index">Autores</a></li>
                         <li class="nav-item"><a class="nav-link @(currentController == "Libros" ? "active" : "")" aria-current="@(currentController == "Libros" ? "page" : null)" asp-controller="Libros" asp-action="Index">Libros</a></li>
+                        @if (Roles.Lista.Any(User.IsInRole))
+                        {
+                            <li class="nav-item"><a class="nav-link @(currentController == "Reportes" ? "active" : "")" aria-current="@(currentController == "Reportes" ? "page" : null)" asp-controller="Reportes" asp-action="Index">Reportes</a></li>
+                        }
                         <li class="nav-item"><a class="nav-link @(currentController == "Home" && currentAction == "Usuarios" ? "active" : "")" aria-current="@(currentController == "Home" && currentAction == "Usuarios" ? "page" : null)" asp-controller="Home" asp-action="Usuarios">Usuarios</a></li>
                         @if (User.IsInRole(Roles.Admin))
                         {

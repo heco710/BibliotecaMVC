@@ -54,6 +54,7 @@ builder.Services.AddScoped<ILibroService, LibroService>();
 builder.Services.AddScoped<IAutorService, AutorService>();
 builder.Services.AddScoped<IRepositorioCategoria, RepositorioCategoriasSql>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+builder.Services.AddScoped<IReporteLibrosService, ReporteLibrosService>();
 
 var app = builder.Build();
 
