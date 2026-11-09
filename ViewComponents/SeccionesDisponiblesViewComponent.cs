@@ -19,7 +19,10 @@ public sealed class SeccionesDisponiblesViewComponent : ViewComponent
         };
         // Mismas reglas que [Authorize] en los controladores: Libros exige un rol y Roles solo el Admin.
         if (Roles.Lista.Any(User.IsInRole))
+        {
             secciones.Insert(0, new("Libros", "Obras, descripciones y disponibilidad.", "Libros", "Index"));
+            secciones.Add(new("Reportes", "Libros en PDF y Excel, con filtros por autor o categoría.", "Reportes", "Index"));
+        }
         if (User.IsInRole(Roles.Admin))
             secciones.Add(new("Roles", "Asignación de permisos a los usuarios.", "Usuarios", "Index"));
         if (User.Identity?.IsAuthenticated != true)

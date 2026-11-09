@@ -1,0 +1,96 @@
+@model ReporteLibros
+@{
+    ViewData["Title"] = "Reportes";
+}
+
+<section class="module-page">
+    <div class="container-xl">
+        <header class="module-header">
+            <div>
+                <h1 id="reportes-titulo">Reporte de Libros</h1>
+                <p>Consulta los libros registrados en la base de datos, filtra por autor o categoría y descarga el resultado en PDF o Excel. Ambos documentos usan los mismos filtros que la vista previa.</p>
+            </div>
+            <div class="report-actions">
+                <a class="btn btn-primary" asp-action="LibrosPdf" asp-route-autor="@Model.Autor" asp-route-categoria="@Model.Categoria">Generar reporte PDF</a>
+                <a class="btn btn-outline-primary" asp-action="LibrosExcel" asp-route-autor="@Model.Autor" asp-route-categoria="@Model.Categoria">Exportar a Excel</a>
+            </div>
+        </header>
+
+        <form class="report-filters" method="get" asp-action="Index" aria-label="Filtros del reporte">
+            <div>
+                <label for="autor" class="form-label">Autor</label>
+                <select id="autor" name="autor" class="form-select">
+                    <option value="">Todos los autores</option>
+                    @foreach (var autor in Model.AutoresDisponibles)
+                    {
+                        <option value="@autor" selected="@(string.Equals(autor, Model.Autor, StringComparison.OrdinalIgnoreCase))">@autor</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label for="categoria" class="form-label">Categoría</label>
+                <select id="categoria" name="categoria" class="form-select">
+                    <option value="">Todas las categorías</option>
+                    @foreach (var categoria in Model.CategoriasDisponibles)
+                    {
+                        <option value="@categoria" selected="@(string.Equals(categoria, Model.Categoria, StringComparison.OrdinalIgnoreCase))">@categoria</option>
+                    }
+                </select>
+            </div>
+            <div class="report-filter-buttons">
+                <button type="submit" class="btn btn-outline-primary">Aplicar filtros</button>
+                @if (Model.Autor is not null || Model.Categoria is not null)
+                {
+                    <a class="text-link" asp-action="Index">Quitar filtros</a>
+                }
+            </div>
+        </form>
+
+        <dl class="report-summary" aria-label="Resumen del reporte">
+            <div><dt>Total de libros</dt><dd>@Model.Total</dd></div>
+            <div><dt>Disponibles</dt><dd>@Model.Disponibles</dd></div>
+            <div><dt>Prestados</dt><dd>@Model.Prestados</dd></div>
+            <div><dt>Autores</dt><dd>@Model.TotalAutores</dd></div>
+            <div><dt>Categorías</dt><dd>@Model.TotalCategorias</dd></div>
+        </dl>
+
+        <section class="module-table-card" aria-labelledby="reportes-titulo">
+            <div class="module-card-heading">
+                <h2>Vista previa</h2>
+                <p>@Model.DescripcionFiltros · Generado el @Model.FechaGeneracion.ToString("dd/MM/yyyy HH:mm")</p>
+            </div>
+            @if (Model.Total == 0)
+            {
+                <div class="alert alert-info" role="status">No hay libros que coincidan con los filtros aplicados.</div>
+            }
+            else
+            {
+                <div class="table-responsive" tabindex="0" role="region" aria-label="Libros del reporte; desplaza horizontalmente para ver todas las columnas">
+                    <table class="table report-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th><th scope="col">Título</th><th scope="col">Autor</th><th scope="col">Nacionalidad</th>
+                                <th scope="col">Categoría</th><th scope="col">Año</th><th scope="col">ISBN</th><th scope="col">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Filas)
+                            {
+                                <tr>
+                                    <td>@fila.Libro.ID</td>
+                                    <th scope="row"><a asp-controller="Libros" asp-action="Details" asp-route-id="@fila.Libro.ID">@fila.Libro.Titulo</a></th>
+                                    <td>@fila.Libro.Autor</td>
+                                    <td>@(fila.Nacionalidad ?? "—")</td>
+                                    <td><span class="category-pill">@fila.Libro.Categoria</span></td>
+                                    <td>@fila.Libro.AnioPublicacion</td>
+                                    <td>@fila.Libro.ISBN</td>
+                                    <td>@(fila.Libro.Disponible ? "Disponible" : "Prestado")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+</section>

@@ -39,6 +39,7 @@ Con la base preparada, basta con ejecutar `dotnet run --launch-profile http`: al
 - Validación de campos, fechas e identificadores y protección antiforgery en formularios.
 - Diseño adaptable, portadas editoriales y fotografías de autores almacenadas localmente.
 - Fuentes y licencias de las imágenes en `/Home/Creditos`.
+- Reportes de libros en `/Reportes`: vista previa con filtros por autor y categoría, descarga en PDF (QuestPDF) y Excel (ClosedXML). Detalle y evidencias en [`docs/reportes/README.md`](docs/reportes/README.md).
 
 Los retratos se asignan por nombre completo en `Views/Autores/_Retrato.cshtml`. Los autores sin una fotografía asociada muestran «Sin foto».
 
@@ -90,6 +91,14 @@ Cuentas de prueba (solo en Development, definidas en `appsettings.Development.js
 Para ver la página de error personalizada localmente, ejecuta con `ASPNETCORE_ENVIRONMENT=Production` (con `dotnet publish` para que se sirvan los estilos aislados). Los registros aparecen en la consola de `dotnet run` o en la ventana **Salida** de Visual Studio (opción «Mostrar salida de: ASP.NET Core Web Server»).
 
 ## Pruebas
+
+Las pruebas unitarias del módulo Libros (xUnit y Moq) no requieren base de datos. También se ejecutan desde el Explorador de pruebas de Visual Studio al abrir `BibliotecaMVC.slnx`:
+
+```powershell
+dotnet test tests/BibliotecaMVC.UnitTests
+```
+
+Los casos, resultados y la comparación con las pruebas de integración y de extremo a extremo están en [`tests/BibliotecaMVC.UnitTests/README.md`](tests/BibliotecaMVC.UnitTests/README.md).
 
 Las comprobaciones de integración requieren una base separada:
 
